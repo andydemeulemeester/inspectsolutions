@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.0.1"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.0.2"; /* houd gelijk met VERSION in sw.js */
 
 var $ = function(s){ return document.querySelector(s); };
 var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
@@ -714,7 +714,6 @@ function openCodes(){
   $("#cfgKeyHint").textContent = cfg ? "Een sleutel is opgeslagen. Laat leeg om die te houden." : "";
   setCfgState("", "");
   $("#firstRun").hidden = !!cfg;
-  $("#aboutInfo").textContent = "InspectSolutions versie " + VERSION + ".";
   renderStorage();
   pushLayer("codes");
 }
@@ -788,7 +787,7 @@ async function renderStorage(){
   try{
     var est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
     var persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null;
-    var txt = "InspectSolutions versie " + VERSION + ".";
+    var txt = "InspectSolutions versie " + VERSION + (document.documentElement.classList.contains("env-dev") ? " (testomgeving DEV)" : "") + ".";
     if(est && est.usage != null) txt += " Opslag in gebruik: " + (est.usage / 1048576).toFixed(1).replace(".", ",") + " MB.";
     if(persisted != null) txt += persisted ? " Opslag is beveiligd tegen opruimen." : " Opslag is nog niet beveiligd tegen opruimen.";
     el.textContent = txt;

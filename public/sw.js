@@ -2,13 +2,19 @@
    De nieuwe versie wordt op de achtergrond binnengehaald en pas actief als de gebruiker
    op "Nu bijwerken" tikt of de app volledig sluit. Tot dan blijft de oude versie werken.
    Verhoog VERSION bij elke wijziging aan de bestanden (en in app.js). */
-var VERSION = "1.0.1";
+var VERSION = "1.0.2";
 var CACHE = "inspect-shell-" + VERSION;
 var SHELL = [
   "index.html",
   "style.css",
   "app.js",
+  "env.js",
   "manifest.webmanifest",
+  "manifest-dev.webmanifest",
+  "icons/dev-icon-192.png",
+  "icons/dev-icon-512.png",
+  "icons/dev-icon-maskable-512.png",
+  "icons/dev-apple-touch-icon.png",
   "icons/icon-192.png",
   "icons/icon-512.png",
   "icons/icon-maskable-512.png",

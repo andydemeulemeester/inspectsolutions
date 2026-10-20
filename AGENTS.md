@@ -13,6 +13,9 @@ Instructies voor AI-agents en ontwikkelaars die aan InspectSolutions werken. Pro
 4. Merge `dev` naar `prd`. Productie wordt automatisch bijgewerkt.
 5. De gsm haalt de nieuwe versie op de achtergrond op en toont “Nieuwe versie beschikbaar”. De oude versie blijft werken tot de gebruiker bijwerkt. Lokale data (IndexedDB) blijft ongemoeid.
 
+## DEV en PRD herkennen
+Dezelfde code draait op beide omgevingen. `public/env.js` kiest op basis van het adres: enkel `inspect.gapsolutions.be` is PRD, elk ander adres is DEV (andere naam “InspectSolutions DEV”, roze-rood icoon met DEV-balk via `manifest-dev.webmanifest`, DEV-label in de kop). Nieuwe bestanden voor het manifest of de iconen moeten ook in `SHELL` in `public/sw.js` staan.
+
 ## Regels
 - Gebruik voor `dev` een aparte test-Sheet, Drive-map en Apps Script-deployment. Zet geen echte gegevens op `dev`.
 - Zet de Apps Script-URL en de geheime sleutel **nooit** in de code of de repo. Ze worden op het toestel ingevoerd in Beheer.
