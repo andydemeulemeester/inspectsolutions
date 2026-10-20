@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>InspectSolutions – prototype</title>
+<style>
+:root{
+  color-scheme: light dark;
+  --bg:#edf1f4; --surface:#ffffff; --surface2:#e1e8ed; --text:#0f2233; --muted:#5a6b7a; --line:#cdd7df;
+  --accent:#f5a300; --accent-ink:#1a1200;
+  --sel:#12324a; --sel-ink:#ffffff; --link:#0b5cad;
+  --ok:#17703a; --ok-bg:#d9f1e1; --bad:#c0301f; --bad-bg:#fde3de;
+  --head-bg:#0f2a3f; --head-ink:#f1f6fa;
+  --focus:#0b5cad;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1620; --surface:#12212e; --surface2:#1c2f3f; --text:#e8f0f6; --muted:#8ea3b4; --line:#26394a;
+    --accent:#ffb81f; --accent-ink:#1a1200;
+    --sel:#2b6a9e; --sel-ink:#ffffff; --link:#7db7f0;
+    --ok:#6fd69a; --ok-bg:#123222; --bad:#ff9d8f; --bad-bg:#3c1b17;
+    --head-bg:#07101a; --head-ink:#e8f0f6; --focus:#7db7f0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1620; --surface:#12212e; --surface2:#1c2f3f; --text:#e8f0f6; --muted:#8ea3b4; --line:#26394a;
+  --accent:#ffb81f; --accent-ink:#1a1200;
+  --sel:#2b6a9e; --sel-ink:#ffffff; --link:#7db7f0;
+  --ok:#6fd69a; --ok-bg:#123222; --bad:#ff9d8f; --bad-bg:#3c1b17;
+  --head-bg:#07101a; --head-ink:#e8f0f6; --focus:#7db7f0;
+}
+
+*{box-sizing:border-box}
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;background:var(--bg)}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+body::before{
+  content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+  background:var(--head-bg);z-index:60;
+}
+[hidden]{display:none !important}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* Header */
+.bar{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+  background:var(--head-bg);color:var(--head-ink);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.bar{box-shadow:inset 0 -3px 0 var(--accent)}
+.logo{
+  width:38px;height:38px;border-radius:10px;flex:none;display:grid;place-items:center;
+  background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:15px;letter-spacing:-.02em;
+}
+h1{margin:0;font-size:18px;line-height:1.15;font-weight:750;letter-spacing:-.01em}
+.sub{font-size:12px;opacity:.7}
+.net{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.1);white-space:nowrap}
+.net .dot{width:9px;height:9px;border-radius:50%;background:#58d27a}
+.net.off .dot{background:#ff8a7d}
+
+.warn{margin:12px 16px 0;padding:12px 14px;border-radius:12px;background:var(--bad-bg);color:var(--bad);font-size:14px}
+
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 130px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.stat b{display:block;font-size:30px;line-height:1.05;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.bad b{color:var(--bad)}
+.stat.ok b{color:var(--ok)}
+
+/* Sync */
+.sync{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.sync strong{display:block;font-size:15px}
+.sync.pending{border-color:var(--accent)}
+
+/* Buttons */
+.btn{
+  min-height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface2);font-weight:650;cursor:pointer;flex:1;
+}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.danger{color:var(--bad)}
+.btn.small{min-height:40px;padding:0 14px;flex:none}
+.btn.wide{width:100%;flex:none;margin-top:10px}
+.btn.icon{flex:none;width:48px;padding:0;font-size:22px;line-height:1}
+.btn[disabled]{opacity:.5}
+
+/* Segmented */
+.seg{display:flex;background:var(--surface2);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;min-height:42px;border:0;background:transparent;border-radius:9px;font-weight:650;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.seg.status button{min-height:52px;font-size:17px}
+.seg.status button.nok.on{background:var(--bad);color:#fff}
+.seg.status button.ok.on{background:var(--ok);color:#fff}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .seg.status button.nok.on{color:#2a0a06}
+  :root:not([data-theme="light"]) .seg.status button.ok.on{color:#07210f}
+}
+:root[data-theme="dark"] .seg.status button.nok.on{color:#2a0a06}
+:root[data-theme="dark"] .seg.status button.ok.on{color:#07210f}
+.filter{margin:4px 0 12px}
+
+/* List */
+.card{
+  display:flex;gap:14px;align-items:flex-start;width:100%;text-align:left;cursor:pointer;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;
+}
+.card .nr{min-width:44px;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1}
+.card .body{flex:1;min-width:0;display:block}
+.card .items{display:block;font-size:15px;line-height:1.3}
+.card .items + .items{margin-top:4px}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;font-size:13px;background:var(--surface2);padding:1px 6px;border-radius:6px;margin-right:6px;white-space:nowrap}
+.card .lbl{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .meta{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:13px;color:var(--muted)}
+.card .side{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none}
+.pill{font-size:12px;font-weight:750;padding:4px 10px;border-radius:999px}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.nok{background:var(--bad-bg);color:var(--bad)}
+.state{font-size:12px;color:var(--muted)}
+.state.todo{color:var(--link);font-weight:650}
+.empty{padding:36px 16px;text-align:center;color:var(--muted);border:2px dashed var(--line);border-radius:14px}
+.sim{display:flex;align-items:center;gap:10px;margin-top:18px;font-size:14px;color:var(--muted)}
+.sim input{width:22px;height:22px}
+
+/* Form */
+.formhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:6px}
+.bignr{font-size:44px;font-weight:850;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.field{margin-top:18px}
+.field > label,.lab{display:block;font-weight:700;margin-bottom:8px;font-size:15px}
+.row{display:flex;gap:10px}
+.pick{
+  width:100%;min-height:56px;text-align:left;padding:10px 14px;border-radius:12px;cursor:pointer;
+  background:var(--surface);border:1.5px solid var(--line);display:block;line-height:1.3;
+}
+.pick .ph{color:var(--muted)}
+.linkbtn{margin-top:10px;background:none;border:0;color:var(--link);font-weight:700;padding:10px 0;cursor:pointer;min-height:44px}
+textarea,input[type="number"],input[type="search"]{
+  width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;
+}
+textarea{resize:vertical;min-height:100px}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.th{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--surface2)}
+.th img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.th .x{position:absolute;top:4px;right:4px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:20px;line-height:1;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:46px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip.on{background:var(--sel);color:var(--sel-ink);border-color:transparent}
+.money{display:flex;align-items:center;gap:10px;margin-top:10px}
+.money span{font-weight:700;font-size:18px}
+.formnote{margin-top:6px}
+h2{font-size:18px;margin:24px 0 6px}
+h2:first-child{margin-top:4px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;background:var(--surface2);padding:1px 6px;border-radius:6px}
+#codesTa{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;min-height:320px;white-space:pre;overflow:auto}
+
+/* Dock */
+.dock{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;gap:10px;
+  background:var(--surface);border-top:1px solid var(--line);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));
+}
+.dock .btn.primary{flex:2}
+@media (min-width:700px){.dock{padding-left:calc(50% - 320px + 16px);padding-right:calc(50% - 320px + 16px)}}
+
+/* Modals */
+.modal{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.mhead{display:flex;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.mlist{flex:1;overflow:auto;padding:8px 16px}
+.mfoot{padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line)}
+.opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:14px 4px;min-height:54px;cursor:pointer}
+.opt .code{margin-top:1px}
+.opt.on{background:var(--surface2)}
+#lightbox{background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+
+#toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));
+  z-index:70;background:var(--head-bg);color:var(--head-ink);padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;
+  max-width:calc(100% - 32px);text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.3);
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">IS</div>
+    <div><h1>InspectSolutions</h1><div class="sub">Prototype voor de rondgang</div></div>
+  </div>
+  <div id="net" class="net"><span class="dot"></span><span id="netTxt">Online</span></div>
+</header>
+
+<div id="memwarn" class="warn" hidden>Opslag op dit toestel is hier niet beschikbaar. Punten blijven enkel bewaard zolang deze pagina open staat. Open de pagina rechtstreeks in Chrome om offline opslag te testen.</div>
+
+<main class="wrap">
+
+  <!-- LIJST -->
+  <section id="viewList">
+    <div class="stats">
+      <div class="stat"><b id="stTotal">0</b><span>Punten</span></div>
+      <div class="stat bad"><b id="stNok">0</b><span>NIET OK</span></div>
+      <div class="stat ok"><b id="stOk">0</b><span>OK</span></div>
+    </div>
+
+    <div class="sync" id="syncBox">
+      <div><strong id="syncTitle">Alles gesynchroniseerd</strong><span id="syncSub" class="muted small"></span></div>
+      <button class="btn small" id="btnSync" type="button">Nu synchroniseren</button>
+    </div>
+
+    <div class="seg filter" id="filter" role="group" aria-label="Filter op status">
+      <button type="button" data-f="all" class="on">Alle</button>
+      <button type="button" data-f="nok">NIET OK</button>
+      <button type="button" data-f="ok">OK</button>
+    </div>
+
+    <div id="list"></div>
+
+    <label class="sim"><input type="checkbox" id="simOff"> Offline simuleren (enkel om te testen)</label>
+  </section>
+
+  <!-- FORMULIER -->
+  <section id="viewForm" hidden>
+    <div class="formhead">
+      <div><div class="muted small">Punt</div><div class="bignr" id="fNr">1</div></div>
+      <div class="muted small" id="fTime" style="text-align:right"></div>
+    </div>
+
+    <div class="field">
+      <label id="lblItem1">Item 1</label>
+      <button type="button" class="pick" id="pick0" aria-labelledby="lblItem1"></button>
+    </div>
+
+    <div class="field" id="item2wrap" hidden>
+      <label id="lblItem2">Item 2 (optioneel)</label>
+      <div class="row">
+        <button type="button" class="pick" id="pick1" aria-labelledby="lblItem2"></button>
+        <button type="button" class="btn icon" id="rm1" aria-label="Item 2 verwijderen">×</button>
+      </div>
+    </div>
+    <button type="button" class="linkbtn" id="addItem2">Tweede item toevoegen</button>
+
+    <div class="field">
+      <span class="lab">Foto’s <span class="muted small" id="phCount"></span></span>
+      <div class="row">
+        <button type="button" class="btn" id="btnCam">Foto nemen</button>
+        <button type="button" class="btn" id="btnGal">Uit galerij</button>
+      </div>
+      <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+      <input type="file" id="fileGal" accept="image/*" multiple hidden>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+
+    <div class="field">
+      <label for="note">Opmerking</label>
+      <textarea id="note" rows="4" placeholder="Wat is er vastgesteld?"></textarea>
+    </div>
+
+    <div class="field">
+      <span class="lab">Status</span>
+      <div class="seg status" id="statusSeg" role="group" aria-label="Status">
+        <button type="button" data-s="NIET OK" class="nok on">NIET OK</button>
+        <button type="button" data-s="OK" class="ok">OK</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lab">Prijs</span>
+      <div class="chips" id="chips"></div>
+      <div class="money"><span>€</span><input id="price" type="number" inputmode="numeric" min="0" step="1" placeholder="Ander bedrag" aria-label="Ander bedrag in euro"></div>
+    </div>
+
+    <button type="button" class="btn danger wide" id="btnDelete" hidden>Punt verwijderen</button>
+  </section>
+
+  <!-- BEHEER -->
+  <section id="viewCodes" hidden>
+    <h2>Codelijst</h2>
+    <p class="muted">Eén item per regel, in de vorm <code>CODE | omschrijving</code>. Een regel zonder code krijgt automatisch een code. Bestaande punten behouden hun oorspronkelijke code en tekst.</p>
+    <textarea id="codesTa" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+    <div class="muted small formnote" id="codesCount"></div>
+    <button type="button" class="btn wide" id="btnReset">Standaardlijst herstellen</button>
+
+    <h2>Gegevens</h2>
+    <p class="muted">Wist alle punten van dit toestel en laat de nummering opnieuw bij 1 beginnen.</p>
+    <button type="button" class="btn danger wide" id="btnWipe">Alle punten wissen</button>
+  </section>
+
+</main>
+
+<div class="dock" id="dockList">
+  <button type="button" class="btn" id="btnCodes">Beheer</button>
+  <button type="button" class="btn primary" id="btnNew">Nieuw punt</button>
+</div>
+<div class="dock" id="dockForm" hidden>
+  <button type="button" class="btn" id="btnCancel">Annuleren</button>
+  <button type="button" class="btn primary" id="btnSave">Punt opslaan</button>
+</div>
+<div class="dock" id="dockCodes" hidden>
+  <button type="button" class="btn" id="btnCodesBack">Terug</button>
+  <button type="button" class="btn primary" id="btnCodesSave">Codelijst opslaan</button>
+</div>
+
+<!-- Item kiezen -->
+<div class="modal" id="picker" hidden role="dialog" aria-label="Item kiezen">
+  <div class="mhead">
+    <button type="button" class="btn icon" id="pickClose" aria-label="Sluiten">←</button>
+    <input type="search" id="pickQ" placeholder="Zoek op code of tekst" autocomplete="off" aria-label="Zoeken">
+  </div>
+  <div class="mlist" id="pickList"></div>
+  <div class="mfoot"><button type="button" class="btn wide" id="pickClear" style="margin-top:0">Selectie wissen</button></div>
+</div>
+
+<div class="modal" id="lightbox" hidden role="dialog" aria-label="Foto"><img id="lbImg" alt="Foto"></div>
+
+<div id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+var $ = function(s){ return document.querySelector(s); };
+var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
+
+/* ---------- Standaard codelijst (opgeschoond uit de lijst van de klant) ---------- */
+var DEFAULT_TEXT = [
+"OP01 | opening vergroten en typeoplossing TV254/293  uitvoeren",
+"DI01 | Nazicht gesteldheid muur - lijkt ok te zijn",
+"PR01 | Opening vergroten rond goot en productoplossing uitvoeren",
+"LV01 | Lineaire voeg uit te voeren",
+"OP02 | opening vergroten  kabels/ buizen uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren",
+"DE01 | nieuwe deur te plaatsen - EI30 schilderafwerking + magneet",
+"DE02 | brandwerend glas ok",
+"DI02 | algemeen zicht",
+"OP03 | typeoplossing TV254/293 uitvoeren",
+"DE03 | Herstellen vasthoudmagneet",
+"PR02 | Schuim verwijderen , opening vergroten rond item  en productoplossing uitvoeren",
+"OP04 | typeoplossing TV254/293 uitvoeren en nadien mantelbuis opstoppen met rotswol",
+"OP05 | Schuim verwijderen, opening vergroten en typeoplossing TV254/293 uitvoeren",
+"PR03 | mortel verwijderen , opening vergroten rond kabelbundel en productoplossing uitvoeren",
+"LV02 | Lineaire voeg uit te voeren-oude weg productoplossing",
+"OP06 | 1 buis opening vergroten en typeoplossing TV254/293  uitvoeren",
+"PR04 | Schuim verwijderen , opening vergroten rond buis en productoplossing uitvoeren",
+"PL01 | plafond herstellen",
+"OP07 | opening vergroten en uitvoeren met typeoplossing TV 254/293 en rond de buis omkasting maken met flexibele productoplossing",
+"OP08 | typeoplossing TV254/293 uitvoeren gat te dichten",
+"PL02 | plafond herstellen + kabels TV + buizen productoplossing",
+"OP09 | isolatie openknippen en achterliggend op de muur typeoplossing uitvoeren TV254/293",
+"OP10 | opening vergroten  kabels/buizen uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren",
+"OP11 | Schuim verwijderen, opening vergroten en typeoplossing TV254/293 type C uitvoeren",
+"PR05 | mortel verwijderen , opening vergroten rond kabelbundel /buis en productoplossing uitvoeren",
+"OP12 | typeoplossing TV254/293 uitvoeren en ook mantelbuis opstoppen met rotswol",
+"OP13 | opening vergroten en typeoplossing TV254/293 uitvoeren",
+"OP14 | typeoplossing TV254/293 uitvoeren blind gat te dichten",
+"DE04 | nieuwe zwaai deur te plaatsen - EI30 schilderafwerking + magneet",
+"PR06 | buizen en kabels doorheen nieuw bovenpaneel productoplossing",
+"OP15 | Schuim verwijderen , kabels uit elkaar en uitvoeren typeoplossing TV254/293",
+"LV03 | diversen kabels buizen lin voeg - productopl",
+"LV04 | opmetsen wand +afdichten vlgs TV + lin voeg",
+"DE05 | nieuwe  deur te plaatsen - EI30 schilderafwerking",
+"PR07 | Schuim wegnemen opstop volgens productoplossing  uitlijning is Niet ok+nieuwe klep",
+"PA01 | afdichting via panelen te maken productopl",
+"OP16 | kabels uit elkaar en uitvoeren typeoplossing TV254/293",
+"OP17 | Opening vergroten en typeoplossing TV254/293 uitvoeren",
+"PA02 | dichten opening met panelen",
+"OP18 | buizen en kabels vlgs TV254/293",
+"PA03 | luik openen en afdichten productopl panelen",
+"WA01 | Nieuwe afscherming E60 rolluik/gordijn douches en inkom",
+"WA02 | Achterliggende wand EI30 te plaatsen",
+"WA03 | Wand EI30 te plaatsen",
+"OP19 | bovenconstructie typeopl TV 254/293 + nieuw plafond",
+"DE06 | nieuwe deur te plaatsen - EI30 schilderafwerking + magneet + doorvoeren bovenpaneel",
+"OP20 | kabels uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren",
+"DE07 | nieuwe deur te plaatsen - EI30 schilderafwerking",
+"PR08 | Evt Schuim wegnemen + opstop volgens productoplossing",
+"OP21 | kabels uit elkaar en uitvoeren typeoplossing TV254/293+ productoplossingen",
+"LV05 | lin voeg en paneel",
+"DE08 | nieuwe deur te plaatsen - EI30 schilderafwerking + tussendeurdorpel",
+"OP22 | typeoplossing TV254/293 uitvoeren",
+"PR09 | productoplossing voor kabels en buis",
+"PR10 | Schuim verwijderen, opening vergroten enproductoplossing",
+"PA04 | Nieuw brandwerend luik",
+"PA05 | productoplossing panelen",
+"DE09 | Brandwerende schuifdeur E30-schilderafwerking",
+"WA04 | nieuwe wand EI30 achter bestaand raam",
+"PR11 | opening vergroten rond kabelbundel en productoplossing uitvoeren",
+"WA05 | nieuwe wand EI30 achter bestaand raam - 3 stuks",
+"WA06 | nieuwe wand EI30 achter bestaand raam - achter bekleding",
+"PL03 | plafond  - 2 lagen gips erop",
+"LV06 | productoplossing lin voeg",
+"PR12 | productoplossing voor kabels en buis - kabelgoot",
+"PA06 | herstel achter wand via luik",
+"DI03 | meting",
+"PR13 | Evt Schuim wegnemen + opstop volgens productoplossing   + uitlijning controleren",
+"OP23 | Opening vergroten en typeoplossing TV254/293",
+"DE10 | nieuwe zwaaideur te plaatsen - EI30 schilderafwerking",
+"PA07 | nieuwe doorgeefluik te plaatsen - EI30 schilderafwerking  + brandwerende onderbouw",
+"WA07 | nieuwe wand EI 30",
+"PR14 | opstop volgens productoplossing",
+"LV07 | lin voeg",
+"PA08 | paneel bovenaan brandwerend maken",
+"DI04 | detail",
+"DE11 | Deur comform = ok",
+"DE12 | nieuw brandwerend raam",
+"DE13 | rooster te plaatsen",
+"DE14 | brandwerend rooster"
+].join("\n");
+
+function parseCodes(text){
+  var out = [], used = {}, auto = 1;
+  String(text).split(/\r?\n/).forEach(function(line){
+    line = line.trim();
+    if(!line) return;
+    var code = "", label = line, i = line.indexOf("|");
+    if(i > 0){ code = line.slice(0, i).trim().toUpperCase().slice(0, 8); label = line.slice(i + 1).trim(); }
+    if(!label) return;
+    if(!code || used[code]){
+      do { code = "C" + String(auto++).padStart(3, "0"); } while(used[code]);
+    }
+    used[code] = true;
+    out.push({code: code, label: label});
+  });
+  return out;
+}
+
+/* ---------- Opslag: IndexedDB, met geheugen als noodoplossing ---------- */
+var Store = (function(){
+  var db = null, useMem = false;
+  var mem = {records: {}, meta: {}};
+
+  function open(){
+    var attempt = new Promise(function(resolve){
+      try{
+        var req = indexedDB.open("inspectsolutions", 1);
+        req.onupgradeneeded = function(){
+          var d = req.result;
+          d.createObjectStore("records", {keyPath: "id"});
+          d.createObjectStore("meta", {keyPath: "key"});
+        };
+        req.onsuccess = function(){ db = req.result; resolve(true); };
+        req.onerror = function(){ resolve(false); };
+        req.onblocked = function(){ resolve(false); };
+      }catch(e){ resolve(false); }
+    });
+    var timeout = new Promise(function(resolve){ setTimeout(function(){ resolve(false); }, 3000); });
+    return Promise.race([attempt, timeout]).then(function(ok){ if(!ok) useMem = true; return ok; });
+  }
+
+  function run(storeName, mode, fn){
+    return new Promise(function(resolve, reject){
+      var t = db.transaction(storeName, mode);
+      var req = fn(t.objectStore(storeName));
+      t.oncomplete = function(){ resolve(req ? req.result : undefined); };
+      t.onerror = function(){ reject(t.error); };
+      t.onabort = function(){ reject(t.error); };
+    });
+  }
+
+  return {
+    open: open,
+    all: function(){
+      if(useMem) return Promise.resolve(Object.keys(mem.records).map(function(k){ return mem.records[k]; }));
+      return run("records", "readonly", function(s){ return s.getAll(); });
+    },
+    put: function(rec){
+      if(useMem){ mem.records[rec.id] = rec; return Promise.resolve(); }
+      return run("records", "readwrite", function(s){ return s.put(rec); });
+    },
+    del: function(id){
+      if(useMem){ delete mem.records[id]; return Promise.resolve(); }
+      return run("records", "readwrite", function(s){ return s.delete(id); });
+    },
+    clear: function(){
+      if(useMem){ mem.records = {}; return Promise.resolve(); }
+      return run("records", "readwrite", function(s){ return s.clear(); });
+    },
+    getMeta: function(key){
+      if(useMem) return Promise.resolve(mem.meta[key]);
+      return run("meta", "readonly", function(s){ return s.get(key); }).then(function(r){ return r ? r.value : undefined; });
+    },
+    setMeta: function(key, value){
+      if(useMem){ mem.meta[key] = value; return Promise.resolve(); }
+      return run("meta", "readwrite", function(s){ return s.put({key: key, value: value}); });
+    }
+  };
+})();
+
+/* ---------- Toestand ---------- */
+var codes = [], records = [], filter = "all";
+var view = "List", draft = null, showItem2 = false, pickSlot = 0;
+var forceOff = false, syncing = false;
+var PRICES = [100,200,300,400,500,600,700,800,900,1000];
+
+function isOnline(){ return navigator.onLine !== false && !forceOff; }
+function uid(){
+  try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+  return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+function fmt(iso){
+  var d = new Date(iso);
+  return d.toLocaleDateString("nl-BE", {day:"2-digit", month:"2-digit"}) + " " + d.toLocaleTimeString("nl-BE", {hour:"2-digit", minute:"2-digit"});
+}
+function fmtFull(iso){
+  return new Date(iso).toLocaleString("nl-BE", {dateStyle:"medium", timeStyle:"short"});
+}
+function euro(n){ return "€ " + Number(n).toLocaleString("nl-BE"); }
+
+var toastTimer = null;
+function toast(msg){
+  var t = $("#toast");
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.hidden = true; }, 2600);
+}
+
+/* ---------- Weergave: lijst ---------- */
+function renderNet(){
+  var on = isOnline();
+  $("#net").className = "net" + (on ? "" : " off");
+  $("#netTxt").textContent = on ? "Online" : "Offline";
+}
+function renderStats(){
+  var ok = records.filter(function(r){ return r.status === "OK"; }).length;
+  $("#stTotal").textContent = records.length;
+  $("#stOk").textContent = ok;
+  $("#stNok").textContent = records.length - ok;
+}
+function renderSync(progress, total){
+  var pending = records.filter(function(r){ return !r.synced; }).length;
+  var box = $("#syncBox"), title = $("#syncTitle"), sub = $("#syncSub"), btn = $("#btnSync");
+  box.className = "sync" + (pending ? " pending" : "");
+  btn.disabled = syncing || pending === 0;
+  if(syncing){
+    title.textContent = "Synchroniseren " + progress + " van " + total;
+    sub.textContent = "";
+  }else if(pending === 0){
+    title.textContent = records.length ? "Alles gesynchroniseerd" : "Nog geen punten";
+    sub.textContent = "";
+  }else{
+    title.textContent = pending + (pending === 1 ? " punt wacht" : " punten wachten") + " op synchronisatie";
+    sub.textContent = isOnline() ? " Ze worden zo verstuurd." : " Ze blijven veilig op deze gsm tot er verbinding is.";
+    sub.style.display = "block";
+  }
+}
+function renderList(){
+  var rows = records.filter(function(r){
+    if(filter === "ok") return r.status === "OK";
+    if(filter === "nok") return r.status !== "OK";
+    return true;
+  }).sort(function(a, b){ return b.nr - a.nr; });
+
+  if(!rows.length){
+    $("#list").innerHTML = '<div class="empty">' + (records.length
+      ? "Geen punten met deze status."
+      : "Nog geen punten. Tik op ‘Nieuw punt’ om de rondgang te starten.") + "</div>";
+    return;
+  }
+  $("#list").innerHTML = rows.map(function(r){
+    var items = (r.items || []).map(function(it){
+      return '<span class="items"><span class="code">' + esc(it.code) + '</span><span class="lbl">' + esc(it.label) + "</span></span>";
+    }).join("");
+    var meta = "<span>" + esc(fmt(r.created)) + "</span>";
+    if(r.photos && r.photos.length) meta += "<span>" + r.photos.length + (r.photos.length === 1 ? " foto" : " foto’s") + "</span>";
+    if(r.price != null) meta += "<span>" + esc(euro(r.price)) + "</span>";
+    if(r.note) meta += "<span>Opmerking</span>";
+    return '<button type="button" class="card" data-id="' + esc(r.id) + '">' +
+      '<span class="nr">' + r.nr + "</span>" +
+      '<span class="body">' + items + '<span class="meta">' + meta + "</span></span>" +
+      '<span class="side"><span class="pill ' + (r.status === "OK" ? "ok" : "nok") + '">' + esc(r.status) + "</span>" +
+      '<span class="state ' + (r.synced ? "" : "todo") + '">' + (r.synced ? "Verstuurd" : "Te versturen") + "</span></span>" +
+      "</button>";
+  }).join("");
+}
+function renderAll(){ renderNet(); renderStats(); renderSync(); renderList(); }
+
+/* ---------- Weergave wisselen ---------- */
+function show(v){
+  view = v;
+  ["List","Form","Codes"].forEach(function(n){
+    $("#view" + n).hidden = (n !== v);
+    $("#dock" + n).hidden = (n !== v);
+  });
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Formulier ---------- */
+function blankDraft(){
+  return {
+    id: uid(), isNew: true, nr: null, created: new Date().toISOString(),
+    items: [null, null], photos: [], note: "", status: "NIET OK", price: null
+  };
+}
+async function nextNr(){
+  var c = (await Store.getMeta("counter")) || 0;
+  var max = records.reduce(function(m, r){ return Math.max(m, r.nr); }, 0);
+  return Math.max(c, max) + 1;
+}
+async function openForm(rec){
+  if(rec){
+    draft = {
+      id: rec.id, isNew: false, nr: rec.nr, created: rec.created,
+      items: [rec.items[0] || null, rec.items[1] || null],
+      photos: (rec.photos || []).map(function(b){ return {blob: b, url: URL.createObjectURL(b)}; }),
+      note: rec.note || "", status: rec.status, price: rec.price
+    };
+  }else{
+    draft = blankDraft();
+    draft.nr = await nextNr();
+  }
+  showItem2 = !!draft.items[1];
+  $("#fNr").textContent = "#" + draft.nr;
+  $("#fTime").textContent = (draft.isNew ? "Aangemaakt " : "Aangemaakt ") + fmtFull(draft.created);
+  $("#note").value = draft.note;
+  $("#price").value = draft.price == null ? "" : draft.price;
+  $("#btnDelete").hidden = draft.isNew;
+  $("#btnDelete").textContent = "Punt verwijderen";
+  renderItems(); renderThumbs(); renderStatus(); renderChips();
+  show("Form");
+}
+function closeForm(){
+  if(draft) draft.photos.forEach(function(p){ try{ URL.revokeObjectURL(p.url); }catch(e){} });
+  draft = null;
+  show("List");
+}
+function pickHtml(it){
+  return it ? '<span class="code">' + esc(it.code) + "</span>" + esc(it.label) : '<span class="ph">Kies een item…</span>';
+}
+function renderItems(){
+  $("#pick0").innerHTML = pickHtml(draft.items[0]);
+  $("#pick1").innerHTML = pickHtml(draft.items[1]);
+  $("#item2wrap").hidden = !showItem2;
+  $("#addItem2").hidden = showItem2;
+}
+function renderThumbs(){
+  $("#phCount").textContent = draft.photos.length ? "(" + draft.photos.length + ")" : "";
+  $("#thumbs").innerHTML = draft.photos.map(function(p, i){
+    return '<div class="th"><img src="' + p.url + '" alt="Foto ' + (i + 1) + '" data-i="' + i + '">' +
+      '<button type="button" class="x" data-rm="' + i + '" aria-label="Foto ' + (i + 1) + ' verwijderen">×</button></div>';
+  }).join("");
+}
+function renderStatus(){
+  Array.prototype.forEach.call(document.querySelectorAll("#statusSeg button"), function(b){
+    b.classList.toggle("on", b.getAttribute("data-s") === draft.status);
+  });
+}
+function renderChips(){
+  $("#chips").innerHTML = PRICES.map(function(v){
+    return '<button type="button" class="chip' + (draft.price === v ? " on" : "") + '" data-v="' + v + '">€ ' + v + "</button>";
+  }).join("");
+}
+
+/* foto's verkleinen voor opslag */
+async function shrink(file){
+  var MAX = 1600, Q = 0.72, src, w, h;
+  try{
+    src = await createImageBitmap(file);
+    w = src.width; h = src.height;
+  }catch(e){
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    await new Promise(function(res, rej){ img.onload = res; img.onerror = rej; img.src = url; });
+    src = img; w = img.naturalWidth; h = img.naturalHeight;
+    URL.revokeObjectURL(url);
+  }
+  var s = Math.min(1, MAX / Math.max(w, h));
+  var c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+  c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
+  return new Promise(function(res){ c.toBlob(function(b){ res(b || file); }, "image/jpeg", Q); });
+}
+async function addFiles(fileList){
+  var files = Array.prototype.slice.call(fileList || []);
+  if(!files.length || !draft) return;
+  toast("Foto’s verwerken…");
+  for(var i = 0; i < files.length; i++){
+    try{
+      var blob = await shrink(files[i]);
+      if(!draft) return;
+      draft.photos.push({blob: blob, url: URL.createObjectURL(blob)});
+    }catch(e){
+      toast("Een foto kon niet verwerkt worden.");
+    }
+  }
+  renderThumbs();
+}
+
+/* item kiezen */
+function openPicker(slot){
+  pickSlot = slot;
+  $("#pickQ").value = "";
+  renderPick("");
+  $("#picker").hidden = false;
+  setTimeout(function(){ $("#pickQ").focus(); }, 50);
+}
+function renderPick(q){
+  q = q.trim().toLowerCase();
+  var cur = draft && draft.items[pickSlot] ? draft.items[pickSlot].code : null;
+  var rows = codes.filter(function(c){ return !q || (c.code + " " + c.label).toLowerCase().indexOf(q) !== -1; });
+  $("#pickList").innerHTML = rows.length ? rows.map(function(c){
+    return '<button type="button" class="opt' + (c.code === cur ? " on" : "") + '" data-code="' + esc(c.code) + '"><span class="code">' + esc(c.code) + "</span><span>" + esc(c.label) + "</span></button>";
+  }).join("") : '<div class="empty" style="margin-top:12px">Geen item gevonden.</div>';
+}
+function closePicker(){ $("#picker").hidden = true; }
+
+/* opslaan */
+async function saveDraft(){
+  if(!draft) return;
+  if(!draft.items[0]){ toast("Kies eerst een item."); return; }
+  draft.note = $("#note").value.trim();
+  var rec;
+  if(draft.isNew){
+    var nr = await nextNr();
+    await Store.setMeta("counter", nr);
+    rec = {id: draft.id, nr: nr, created: draft.created};
+  }else{
+    rec = records.filter(function(r){ return r.id === draft.id; })[0] || {id: draft.id, nr: draft.nr, created: draft.created};
+  }
+  rec.items = draft.items.filter(Boolean);
+  rec.photos = draft.photos.map(function(p){ return p.blob; });
+  rec.note = draft.note;
+  rec.status = draft.status;
+  rec.price = draft.price;
+  rec.synced = false;
+  rec.updated = new Date().toISOString();
+  try{
+    await Store.put(rec);
+  }catch(e){
+    toast("Opslaan mislukt. Probeer opnieuw.");
+    return;
+  }
+  records = await Store.all();
+  var wasNew = draft.isNew;
+  closeForm();
+  renderAll();
+  toast(wasNew ? "Punt " + rec.nr + " opgeslagen op deze gsm." : "Punt " + rec.nr + " bijgewerkt.");
+  trySync(false);
+}
+
+/* ---------- Synchronisatie (nagebootst) ---------- */
+function wait(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+async function trySync(manual){
+  if(syncing) return;
+  var pending = records.filter(function(r){ return !r.synced; });
+  if(!pending.length){ if(manual) toast("Alles is al gesynchroniseerd."); return; }
+  if(!isOnline()){ if(manual) toast("Geen verbinding. De punten blijven veilig op deze gsm."); return; }
+  syncing = true;
+  var done = 0;
+  renderSync(done, pending.length);
+  for(var i = 0; i < pending.length; i++){
+    if(!isOnline()) break;
+    await wait(450);
+    pending[i].synced = true;
+    try{ await Store.put(pending[i]); }catch(e){ pending[i].synced = false; break; }
+    done++;
+    renderSync(done, pending.length);
+    renderList();
+  }
+  syncing = false;
+  renderAll();
+  if(done === pending.length) toast(done + (done === 1 ? " punt" : " punten") + " verstuurd (demo).");
+  else if(done > 0) toast("Verbinding weg. De rest blijft op de gsm.");
+}
+
+/* ---------- Beheer ---------- */
+function openCodes(){
+  $("#codesTa").value = codes.map(function(c){ return c.code + " | " + c.label; }).join("\n");
+  $("#codesCount").textContent = codes.length + " items";
+  $("#btnWipe").textContent = "Alle punten wissen";
+  show("Codes");
+}
+
+/* tweetraps-bevestiging voor wissen */
+function armButton(btn, label, action){
+  if(btn.getAttribute("data-armed")){
+    btn.removeAttribute("data-armed");
+    action();
+    return;
+  }
+  var original = btn.textContent;
+  btn.setAttribute("data-armed", "1");
+  btn.textContent = label;
+  setTimeout(function(){
+    if(btn.getAttribute("data-armed")){ btn.removeAttribute("data-armed"); btn.textContent = original; }
+  }, 4000);
+}
+
+/* ---------- Events ---------- */
+function bind(){
+  $("#btnNew").addEventListener("click", function(){ openForm(null); });
+  $("#btnCodes").addEventListener("click", openCodes);
+  $("#btnSync").addEventListener("click", function(){ trySync(true); });
+  $("#btnCancel").addEventListener("click", closeForm);
+  $("#btnSave").addEventListener("click", saveDraft);
+
+  $("#list").addEventListener("click", function(e){
+    var card = e.target.closest(".card");
+    if(!card) return;
+    var rec = records.filter(function(r){ return r.id === card.getAttribute("data-id"); })[0];
+    if(rec) openForm(rec);
+  });
+
+  $("#filter").addEventListener("click", function(e){
+    var b = e.target.closest("button");
+    if(!b) return;
+    filter = b.getAttribute("data-f");
+    Array.prototype.forEach.call(document.querySelectorAll("#filter button"), function(x){ x.classList.toggle("on", x === b); });
+    renderList();
+  });
+
+  $("#simOff").addEventListener("change", function(e){
+    forceOff = e.target.checked;
+    renderNet(); renderSync();
+    if(!forceOff){ toast("Verbinding hersteld."); trySync(false); }
+  });
+  window.addEventListener("online", function(){ renderNet(); renderSync(); trySync(false); });
+  window.addEventListener("offline", function(){ renderNet(); renderSync(); });
+
+  /* items */
+  $("#pick0").addEventListener("click", function(){ openPicker(0); });
+  $("#pick1").addEventListener("click", function(){ openPicker(1); });
+  $("#addItem2").addEventListener("click", function(){ showItem2 = true; renderItems(); openPicker(1); });
+  $("#rm1").addEventListener("click", function(){ draft.items[1] = null; showItem2 = false; renderItems(); });
+  $("#pickClose").addEventListener("click", closePicker);
+  $("#pickQ").addEventListener("input", function(e){ renderPick(e.target.value); });
+  $("#pickClear").addEventListener("click", function(){
+    draft.items[pickSlot] = null;
+    if(pickSlot === 1) showItem2 = false;
+    renderItems(); closePicker();
+  });
+  $("#pickList").addEventListener("click", function(e){
+    var b = e.target.closest(".opt");
+    if(!b) return;
+    var code = b.getAttribute("data-code");
+    var c = codes.filter(function(x){ return x.code === code; })[0];
+    if(c){ draft.items[pickSlot] = {code: c.code, label: c.label}; }
+    renderItems(); closePicker();
+  });
+
+  /* foto's */
+  $("#btnCam").addEventListener("click", function(){ $("#fileCam").click(); });
+  $("#btnGal").addEventListener("click", function(){ $("#fileGal").click(); });
+  $("#fileCam").addEventListener("change", function(e){ addFiles(e.target.files); e.target.value = ""; });
+  $("#fileGal").addEventListener("change", function(e){ addFiles(e.target.files); e.target.value = ""; });
+  $("#thumbs").addEventListener("click", function(e){
+    var rm = e.target.closest("[data-rm]");
+    if(rm){
+      var i = Number(rm.getAttribute("data-rm"));
+      try{ URL.revokeObjectURL(draft.photos[i].url); }catch(err){}
+      draft.photos.splice(i, 1);
+      renderThumbs();
+      return;
+    }
+    var img = e.target.closest("img[data-i]");
+    if(img){ $("#lbImg").src = img.src; $("#lightbox").hidden = false; }
+  });
+  $("#lightbox").addEventListener("click", function(){ $("#lightbox").hidden = true; });
+
+  /* status en prijs */
+  $("#statusSeg").addEventListener("click", function(e){
+    var b = e.target.closest("button");
+    if(!b) return;
+    draft.status = b.getAttribute("data-s");
+    renderStatus();
+  });
+  $("#chips").addEventListener("click", function(e){
+    var b = e.target.closest(".chip");
+    if(!b) return;
+    var v = Number(b.getAttribute("data-v"));
+    draft.price = (draft.price === v) ? null : v;
+    $("#price").value = draft.price == null ? "" : draft.price;
+    renderChips();
+  });
+  $("#price").addEventListener("input", function(e){
+    var v = e.target.value;
+    draft.price = (v === "" || isNaN(Number(v))) ? null : Math.max(0, Number(v));
+    renderChips();
+  });
+
+  $("#btnDelete").addEventListener("click", function(){
+    var btn = $("#btnDelete");
+    armButton(btn, "Tik nogmaals om te verwijderen", async function(){
+      var id = draft.id;
+      await Store.del(id);
+      records = await Store.all();
+      closeForm(); renderAll(); toast("Punt verwijderd.");
+    });
+  });
+
+  /* beheer */
+  $("#btnCodesBack").addEventListener("click", function(){ show("List"); });
+  $("#codesTa").addEventListener("input", function(e){
+    $("#codesCount").textContent = parseCodes(e.target.value).length + " items";
+  });
+  $("#btnCodesSave").addEventListener("click", async function(){
+    var parsed = parseCodes($("#codesTa").value);
+    if(!parsed.length){ toast("De lijst mag niet leeg zijn."); return; }
+    codes = parsed;
+    await Store.setMeta("codes_v2", codes);
+    toast("Codelijst opgeslagen (" + codes.length + " items).");
+    show("List");
+  });
+  $("#btnReset").addEventListener("click", function(){
+    $("#codesTa").value = parseCodes(DEFAULT_TEXT).map(function(c){ return c.code + " | " + c.label; }).join("\n");
+    $("#codesCount").textContent = parseCodes(DEFAULT_TEXT).length + " items";
+    toast("Standaardlijst ingevuld. Tik op ‘Codelijst opslaan’ om te bewaren.");
+  });
+  $("#btnWipe").addEventListener("click", function(){
+    armButton($("#btnWipe"), "Tik nogmaals om alles te wissen", async function(){
+      await Store.clear();
+      await Store.setMeta("counter", 0);
+      records = [];
+      renderAll(); show("List"); toast("Alle punten gewist. Nummering start opnieuw bij 1.");
+    });
+  });
+}
+
+/* ---------- Start ---------- */
+async function init(){
+  bind();
+  var ok = await Store.open();
+  $("#memwarn").hidden = ok;
+  var saved = await Store.getMeta("codes_v2");
+  codes = (Array.isArray(saved) && saved.length) ? saved : parseCodes(DEFAULT_TEXT);
+  records = await Store.all();
+  renderAll();
+  trySync(false);
+}
+init();
+})();
+</script>
+</body>
+</html>

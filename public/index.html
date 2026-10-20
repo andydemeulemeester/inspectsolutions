@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>InspectSolutions</title>
+<meta name="description" content="Controlerondgang voor brandwerende doorvoeringen, deuren en wanden">
+<meta name="theme-color" content="#0f2a3f" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#07101a" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">IS</div>
+    <div><h1>InspectSolutions</h1><div class="sub">Controlerondgang</div></div>
+  </div>
+  <div id="net" class="net"><span class="dot"></span><span id="netTxt">Online</span></div>
+</header>
+
+<div id="memwarn" class="warn" hidden>Opslag op dit toestel is hier niet beschikbaar. Punten blijven enkel bewaard zolang deze pagina open staat. Open de app rechtstreeks in Chrome om offline opslag te gebruiken.</div>
+
+<main class="wrap">
+
+  <!-- LIJST -->
+  <section id="viewList">
+    <div class="notice update" id="updateBar" hidden>
+      <div><strong>Nieuwe versie beschikbaar</strong><span class="muted small">Uw punten blijven bewaard.</span></div>
+      <button type="button" class="btn small primary" id="btnUpdate">Nu bijwerken</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="stTotal">0</b><span>Punten</span></div>
+      <div class="stat bad"><b id="stNok">0</b><span>NIET OK</span></div>
+      <div class="stat ok"><b id="stOk">0</b><span>OK</span></div>
+    </div>
+
+    <div class="sync" id="syncBox">
+      <div><strong id="syncTitle">Alles gesynchroniseerd</strong><span id="syncSub" class="muted small"></span></div>
+      <button class="btn small" id="btnSync" type="button">Nu synchroniseren</button>
+    </div>
+
+    <div class="seg filter" id="filter" role="group" aria-label="Filter op status">
+      <button type="button" data-f="all" class="on">Alle</button>
+      <button type="button" data-f="nok">NIET OK</button>
+      <button type="button" data-f="ok">OK</button>
+    </div>
+
+    <div id="list"></div>
+
+    <label class="sim"><input type="checkbox" id="simOff"> Offline simuleren (enkel om te testen)</label>
+  </section>
+
+  <!-- FORMULIER -->
+  <section id="viewForm" hidden>
+    <div class="formhead">
+      <div><div class="muted small">Punt</div><div class="bignr" id="fNr">1</div></div>
+      <div class="muted small right" id="fTime"></div>
+    </div>
+
+    <div class="field">
+      <label id="lblItem1">Item 1</label>
+      <button type="button" class="pick" id="pick0" aria-labelledby="lblItem1"></button>
+    </div>
+
+    <div class="field" id="item2wrap" hidden>
+      <label id="lblItem2">Item 2 (optioneel)</label>
+      <div class="row">
+        <button type="button" class="pick" id="pick1" aria-labelledby="lblItem2"></button>
+        <button type="button" class="btn icon" id="rm1" aria-label="Item 2 verwijderen">×</button>
+      </div>
+    </div>
+    <button type="button" class="linkbtn" id="addItem2">Tweede item toevoegen</button>
+
+    <div class="field">
+      <span class="lab">Foto’s <span class="muted small" id="phCount"></span></span>
+      <div class="row">
+        <button type="button" class="btn" id="btnCam">Foto nemen</button>
+        <button type="button" class="btn" id="btnGal">Uit galerij</button>
+      </div>
+      <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+      <input type="file" id="fileGal" accept="image/*" multiple hidden>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+
+    <div class="field">
+      <label for="note">Opmerking</label>
+      <textarea id="note" rows="4" placeholder="Wat is er vastgesteld?"></textarea>
+    </div>
+
+    <div class="field">
+      <span class="lab">Status</span>
+      <div class="seg status" id="statusSeg" role="group" aria-label="Status">
+        <button type="button" data-s="NIET OK" class="nok on">NIET OK</button>
+        <button type="button" data-s="OK" class="ok">OK</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lab">Prijs</span>
+      <div class="chips" id="chips"></div>
+      <div class="money"><span>€</span><input id="price" type="number" inputmode="numeric" min="0" step="1" placeholder="Ander bedrag" aria-label="Ander bedrag in euro"></div>
+    </div>
+
+    <button type="button" class="btn danger wide" id="btnDelete" hidden>Punt verwijderen</button>
+  </section>
+
+  <!-- BEHEER -->
+  <section id="viewCodes" hidden>
+    <div class="notice" id="firstRun" hidden><strong>Eerste start.</strong> Vul hieronder de verbinding met de Google Sheet in. Doe dit met internet aan. Daarna werkt de app ook zonder verbinding.</div>
+
+    <h2 id="hCfg">Verbinding</h2>
+    <p class="muted">Het webadres van het Apps Script en de geheime sleutel. Ze worden enkel op dit toestel bewaard.</p>
+    <div class="field">
+      <label for="cfgUrl">Webadres (eindigt op /exec)</label>
+      <input id="cfgUrl" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="cfgKey">Geheime sleutel</label>
+      <input id="cfgKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="muted small formnote" id="cfgKeyHint"></div>
+    </div>
+    <div class="row field">
+      <button type="button" class="btn" id="btnCfgTest">Verbinding testen</button>
+      <button type="button" class="btn primary" id="btnCfgSave">Verbinding opslaan</button>
+    </div>
+    <div class="cfgstate" id="cfgState" role="status"></div>
+
+    <h2>Codelijst</h2>
+    <p class="muted">Eén item per regel, in de vorm <code>CODE | omschrijving</code>. Een regel zonder code krijgt automatisch een code. Bestaande punten behouden hun oorspronkelijke code en tekst.</p>
+    <textarea id="codesTa" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+    <div class="muted small formnote" id="codesCount"></div>
+    <button type="button" class="btn wide" id="btnReset">Standaardlijst herstellen</button>
+
+    <h2>Gegevens</h2>
+    <p class="muted">Wist alle punten van dit toestel en laat de nummering opnieuw bij 1 beginnen.</p>
+    <button type="button" class="btn danger wide" id="btnWipe">Alle punten wissen</button>
+    <p class="muted">Laat de nummering opnieuw bij 1 beginnen zonder punten te wissen. Nieuwe punten kunnen dan hetzelfde nummer krijgen als oudere.</p>
+    <button type="button" class="btn wide" id="btnRenum">Nummering herstarten</button>
+
+    <h2>Over</h2>
+    <p class="muted small" id="aboutInfo"></p>
+  </section>
+
+</main>
+
+<div class="dock" id="dockList">
+  <button type="button" class="btn" id="btnCodes">Beheer</button>
+  <button type="button" class="btn primary" id="btnNew">Nieuw punt</button>
+</div>
+<div class="dock" id="dockForm" hidden>
+  <button type="button" class="btn" id="btnCancel">Annuleren</button>
+  <button type="button" class="btn primary" id="btnSave">Punt opslaan</button>
+</div>
+<div class="dock" id="dockCodes" hidden>
+  <button type="button" class="btn" id="btnCodesBack">Terug</button>
+  <button type="button" class="btn primary" id="btnCodesSave">Codelijst opslaan</button>
+</div>
+
+<!-- Item kiezen -->
+<div class="modal" id="picker" hidden role="dialog" aria-label="Item kiezen">
+  <div class="mhead">
+    <button type="button" class="btn icon" id="pickClose" aria-label="Sluiten">←</button>
+    <input type="search" id="pickQ" placeholder="Zoek op code of tekst" autocomplete="off" aria-label="Zoeken">
+  </div>
+  <div class="mlist" id="pickList"></div>
+  <div class="mfoot"><button type="button" class="btn wide" id="pickClear">Selectie wissen</button></div>
+</div>
+
+<div class="modal" id="lightbox" hidden role="dialog" aria-label="Foto"><img id="lbImg" alt="Foto"></div>
+
+<div id="toast" hidden role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
