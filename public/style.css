@@ -139,7 +139,9 @@ h1{margin:0;font-size:18px;line-height:1.15;font-weight:750;letter-spacing:-.01e
 .state.todo{color:var(--link);font-weight:650}
 .empty{padding:36px 16px;text-align:center;color:var(--muted);border:2px dashed var(--line);border-radius:14px}
 .empty.tight{margin-top:12px}
-.sim{display:flex;align-items:center;gap:10px;margin-top:18px;font-size:14px;color:var(--muted)}
+/* "Offline simuleren" is enkel een testhulp: alleen zichtbaar op DEV (zie env.js), nooit op productie */
+.sim{display:none;align-items:center;gap:10px;margin-top:18px;font-size:14px;color:var(--muted)}
+html.env-dev .sim{display:flex}
 .sim input{width:22px;height:22px}
 
 /* Form */
