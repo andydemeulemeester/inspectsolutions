@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.0.0"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.0.1"; /* houd gelijk met VERSION in sw.js */
 
 var $ = function(s){ return document.querySelector(s); };
 var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };

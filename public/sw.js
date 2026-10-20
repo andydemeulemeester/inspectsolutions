@@ -2,7 +2,7 @@
    De nieuwe versie wordt op de achtergrond binnengehaald en pas actief als de gebruiker
    op "Nu bijwerken" tikt of de app volledig sluit. Tot dan blijft de oude versie werken.
    Verhoog VERSION bij elke wijziging aan de bestanden (en in app.js). */
-var VERSION = "1.0.0";
+var VERSION = "1.0.1";
 var CACHE = "inspect-shell-" + VERSION;
 var SHELL = [
   "index.html",
@@ -20,8 +20,11 @@ self.addEventListener("install", function(event){
   event.waitUntil(caches.open(CACHE).then(async function(cache){
     for(var i = 0; i < SHELL.length; i++){
       var res = await fetch(new Request(SHELL[i], {cache: "reload", credentials: "same-origin"}));
-      /* een omleiding (bv. de aanmeldpagina van Cloudflare Access) mag nooit in de cache belanden */
-      if(!res.ok || res.redirected) throw new Error("Kan " + SHELL[i] + " niet laden");
+      /* Cloudflare leidt /index.html om naar /. Een omleiding binnen dezelfde site is dus toegestaan,
+         een omleiding naar een andere site (de aanmeldpagina van Cloudflare Access) mag nooit in de cache belanden. */
+      if(!res.ok || new URL(res.url).origin !== self.location.origin) throw new Error("Kan " + SHELL[i] + " niet laden");
+      /* een doorgestuurd antwoord mag niet als antwoord op een navigatie dienen: kopieer het zonder dat label */
+      if(res.redirected) res = new Response(await res.blob(), {status: 200, headers: res.headers});
       await cache.put(SHELL[i], res);
     }
   }));
