@@ -8,6 +8,7 @@ var SHELL = [
   "index.html",
   "style.css",
   "app.js",
+  "editor.js",
   "env.js",
   "manifest.webmanifest",
   "manifest-dev.webmanifest",

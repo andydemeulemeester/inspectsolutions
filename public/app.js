@@ -261,6 +261,7 @@ var filter = "all";
 var draft = null, showItem2 = false, pickSlot = 0, saving = false;
 var forceOff = false, syncing = false, syncErr = "";
 var stack = [], view = "List", listScroll = 0, discardOk = false, draftSnap = "";
+var edIndex = -1, editorDiscard = false;
 var PRICES = [50,100,200,300,400,500,600,700,800,900,1000];
 var DEFAULT_PRICE = 50;
 var channel = null;
@@ -379,7 +380,7 @@ function applyLayers(){
   var base = stack.indexOf("codes") >= 0 ? "Codes" : (stack.indexOf("form") >= 0 ? "Form" : "List");
   if(base !== view) show(base);
   $("#picker").hidden = stack.indexOf("picker") < 0;
-  $("#lightbox").hidden = stack.indexOf("lightbox") < 0;
+  $("#editor").hidden = stack.indexOf("editor") < 0;
 }
 function pushLayer(name){
   stack.push(name);
@@ -394,19 +395,30 @@ function formDirty(){
 function draftSnapshot(){
   return JSON.stringify([
     draft.items.map(function(i){ return i ? i.code : null; }),
-    $("#note").value.trim(), draft.status, draft.price, draft.photos.length, $("#fNr").value.trim()
+    $("#note").value.trim(), draft.status, draft.price, draft.photos.length, $("#fNr").value.trim(),
+    draft.photos.map(function(p){ return p.ver || 0; }).join()
   ]);
 }
 function layerClosed(name){
   if(name === "form"){
     if(draft) draft.photos.forEach(function(p){ try{ URL.revokeObjectURL(p.url); }catch(e){} });
     draft = null; discardOk = false;
+  }else if(name === "editor"){
+    window.PhotoEditor.close();       /* geeft afbeelding, canvassen en object-URL's vrij */
+    $("#edConfirm").hidden = true;
+    editorDiscard = false; edIndex = -1;
   }
 }
 window.addEventListener("popstate", function(e){
   var d = (e.state && e.state.d) || 0;
   while(stack.length > d){
     var top = stack[stack.length - 1];
+    if(top === "editor" && !editorDiscard && window.PhotoEditor.isDirty()){
+      /* niet-bewaarde tekening: eerst een bevestiging in de app zelf (geen window.confirm) */
+      history.pushState({d: stack.length}, "");
+      $("#edConfirm").hidden = false;
+      return;
+    }
     if(top === "form" && formDirty() && !discardOk){
       if(!window.confirm("Wijzigingen aan dit punt weggooien?")){
         history.pushState({d: stack.length}, "");
@@ -493,7 +505,10 @@ function renderItems(){
 function renderThumbs(){
   $("#phCount").textContent = draft.photos.length ? "(" + draft.photos.length + ")" : "";
   $("#thumbs").innerHTML = draft.photos.map(function(p, i){
-    return '<div class="th"><img src="' + p.url + '" alt="Foto ' + (i + 1) + '" data-i="' + i + '">' +
+    var pen = isEdited(p)
+      ? '<span class="pen" role="img" aria-label="Bewerkt"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-5L16 4l4 4L9 19z"/></svg></span>'
+      : "";
+    return '<div class="th"><img src="' + p.url + '" alt="Foto ' + (i + 1) + (isEdited(p) ? " (bewerkt)" : "") + ' bewerken" data-i="' + i + '">' + pen +
       '<button type="button" class="x" data-rm="' + i + '" aria-label="Foto ' + (i + 1) + ' verwijderen">×</button></div>';
   }).join("");
 }
@@ -506,6 +521,44 @@ function renderChips(){
   $("#chips").innerHTML = PRICES.map(function(v){
     return '<button type="button" class="chip' + (draft.price === v ? " on" : "") + '" data-v="' + v + '">€ ' + v + "</button>";
   }).join("");
+}
+
+/* ---------- Foto bewerken (tekenen) ---------- */
+/* Een tik op een miniatuur opent de editor met het origineel en de bestaande tekenacties. */
+async function openEditor(i){
+  if(!draft || stack.indexOf("editor") >= 0) return;
+  var p = draft.photos[i];
+  if(!p) return;
+  edIndex = i; editorDiscard = false;
+  pushLayer("editor");
+  try{
+    await window.PhotoEditor.open({blob: p.orig || p.blob, ops: p.ops || []});
+  }catch(e){
+    toast("Foto kon niet geopend worden.");
+    editorDiscard = true; back();
+  }
+}
+async function editorDone(){
+  var res;
+  try{ res = await window.PhotoEditor.finish(); }
+  catch(e){ toast("De foto kon niet bewaard worden."); return; }
+  var p = draft && draft.photos[edIndex];
+  if(res.changed && p){
+    var wasEdited = isEdited(p);
+    if(res.ops.length){
+      if(!p.orig) p.orig = p.blob;           /* het onbewerkte origineel blijft altijd bewaard */
+      p.blob = res.blob; p.ops = res.ops;
+      p.upOrig = wasEdited && p.upOrig;      /* het origineel zelf verandert niet; was het al verstuurd, dan blijft dat zo */
+    }else{
+      if(p.orig){ p.blob = p.orig; p.orig = null; }   /* alles gewist: terug naar het origineel */
+      p.ops = []; p.upOrig = false;
+    }
+    try{ URL.revokeObjectURL(p.url); }catch(e){}
+    p.url = URL.createObjectURL(p.blob);
+    p.up = false; p.ver = (p.ver || 0) + 1; p.dirty = true;   /* opnieuw te versturen */
+    renderThumbs();
+  }
+  editorDiscard = true; back();
 }
 
 /* foto's verkleinen: max. 1600 px, JPEG kwaliteit 0,72 */
@@ -990,9 +1043,14 @@ function bind(){
       return;
     }
     var img = e.target.closest("img[data-i]");
-    if(img){ $("#lbImg").src = img.src; pushLayer("lightbox"); }
+    if(img) openEditor(Number(img.getAttribute("data-i")));
   });
-  $("#lightbox").addEventListener("click", back);
+  $("#edCancel").addEventListener("click", function(){
+    if(window.PhotoEditor.isDirty()) $("#edConfirm").hidden = false; else back();
+  });
+  $("#edKeep").addEventListener("click", function(){ $("#edConfirm").hidden = true; });
+  $("#edDiscard").addEventListener("click", function(){ editorDiscard = true; back(); });
+  $("#edDone").addEventListener("click", editorDone);
 
   /* status en prijs */
   $("#statusSeg").addEventListener("click", function(e){

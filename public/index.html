@@ -171,10 +171,72 @@
   <div class="mfoot"><button type="button" class="btn wide" id="pickClear">Selectie wissen</button></div>
 </div>
 
-<div class="modal" id="lightbox" hidden role="dialog" aria-label="Foto"><img id="lbImg" alt="Foto"></div>
+<!-- Foto bewerken -->
+<div class="modal" id="editor" hidden role="dialog" aria-modal="true" aria-label="Foto bewerken">
+  <div class="mhead ehead">
+    <button type="button" class="btn" id="edCancel" aria-label="Annuleren en foto sluiten">Annuleren</button>
+    <span class="etitle">Foto bewerken</span>
+    <button type="button" class="btn primary" id="edDone" aria-label="Klaar, wijzigingen bewaren">Klaar</button>
+  </div>
+  <div class="estage" id="edStage">
+    <div class="ewrap" id="edWrap">
+      <canvas id="edBase" role="img" aria-label="Foto"></canvas>
+      <canvas id="edLive" aria-label="Tekenvlak: sleep met een vinger om te tekenen"></canvas>
+    </div>
+  </div>
+  <div class="etools" role="toolbar" aria-label="Tekengereedschap">
+    <div class="erow" role="group" aria-label="Gereedschap">
+      <button type="button" class="etool" data-tool="pen" aria-label="Pen, vrij tekenen" aria-pressed="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-5L16 4l4 4L9 19z"/></svg><span>Pen</span></button>
+      <button type="button" class="etool" data-tool="arrow" aria-label="Pijl" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19L19 5M9 5h10v10"/></svg><span>Pijl</span></button>
+      <button type="button" class="etool" data-tool="oval" aria-label="Ovaal of cirkel" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><ellipse cx="12" cy="12" rx="9" ry="6"/></svg><span>Ovaal</span></button>
+      <button type="button" class="etool" data-tool="text" aria-label="Tekst" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 6h14M12 6v13M9 19h6"/></svg><span>Tekst</span></button>
+    </div>
+    <div class="erow" role="group" aria-label="Kleur">
+      <button type="button" class="ecolor c-red" data-color="red" aria-label="Rood" aria-pressed="true"><i></i></button>
+      <button type="button" class="ecolor c-yellow" data-color="yellow" aria-label="Geel" aria-pressed="false"><i></i></button>
+      <button type="button" class="ecolor c-white" data-color="white" aria-label="Wit" aria-pressed="false"><i></i></button>
+      <button type="button" class="ecolor c-black" data-color="black" aria-label="Zwart" aria-pressed="false"><i></i></button>
+    </div>
+    <div class="erow" role="group" aria-label="Dikte">
+      <button type="button" class="etool ew-thin" data-width="thin" aria-label="Dun" aria-pressed="false"><i></i><span>Dun</span></button>
+      <button type="button" class="etool ew-mid" data-width="mid" aria-label="Middel" aria-pressed="true"><i></i><span>Middel</span></button>
+      <button type="button" class="etool ew-thick" data-width="thick" aria-label="Dik" aria-pressed="false"><i></i><span>Dik</span></button>
+    </div>
+    <div class="erow">
+      <button type="button" class="etool flat" id="edUndo" aria-label="Ongedaan maken">Ongedaan</button>
+      <button type="button" class="etool flat" id="edRedo" aria-label="Opnieuw uitvoeren">Opnieuw</button>
+      <button type="button" class="etool flat" id="edClear" aria-label="Alles wissen">Alles wissen</button>
+    </div>
+  </div>
+
+  <div class="eover" id="edConfirm" hidden role="alertdialog" aria-modal="true" aria-label="Wijzigingen weggooien?">
+    <div class="ebox">
+      <p><strong>Wijzigingen aan deze foto weggooien?</strong></p>
+      <div class="erow">
+        <button type="button" class="btn" id="edKeep">Blijven bewerken</button>
+        <button type="button" class="btn danger" id="edDiscard">Weggooien</button>
+      </div>
+    </div>
+  </div>
+  <div class="eover" id="edText" hidden role="dialog" aria-modal="true" aria-label="Tekst toevoegen">
+    <div class="ebox">
+      <label for="edTextInput"><strong>Tekst op de foto</strong></label>
+      <input id="edTextInput" type="text" maxlength="60" autocomplete="off" placeholder="Korte tekst">
+      <div class="erow">
+        <button type="button" class="btn" id="edTextCancel">Annuleren</button>
+        <button type="button" class="btn primary" id="edTextOk">Toevoegen</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="toast" hidden role="status"></div>
 
+<script src="editor.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
