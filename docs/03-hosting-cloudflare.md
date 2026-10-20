@@ -17,9 +17,12 @@ Werkwijze: ontwikkelen en testen op `dev`, daarna `dev` mergen naar `prd`.
    {
      "name": "inspectsolutions",
      "compatibility_date": "2026-10-01",
-     "assets": { "directory": "./public" }
+     "assets": { "directory": "./public" },
+     "previews": {}
    }
    ```
+
+   Het lege `previews`-blok is verplicht voor `npx wrangler preview`; zonder faalt de build met “missing a `previews` block”.
 
 2. Zet **geen `routes` of domeinen** in `wrangler.jsonc`. De domeinen worden in het Cloudflare-dashboard beheerd; previews moeten geconfigureerd worden in hetzelfde systeem als het custom domain.
 3. Zet Wrangler **4.135.0 of nieuwer** als dev-dependency (`package.json`), want Worker Previews vereist die versie en projectcommando’s gebruiken geen nieuwere globale installatie.
