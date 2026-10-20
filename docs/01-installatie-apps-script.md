@@ -39,6 +39,8 @@ Na elke codewijziging: **Implementeren > Implementaties beheren > potlood > Vers
 ## Goed om te weten
 - Een punt wordt op `ID` bijgewerkt (geen dubbele rijen bij opnieuw versturen).
 - Foto’s staan in Drive als `{nr}_{id}_{n}.jpg` en blijven privé; de links in de Sheet werken voor de eigenaar van het account.
+- Is een foto in de app bewerkt (getekend), dan staat de bewerkte versie als `{nr}_{id}_{n}.jpg` in Drive (en in de Sheet) en het onbewerkte origineel als `{nr}_{id}_{n}_orig.jpg`. Wordt een foto later opnieuw bewerkt, dan vervangt de nieuwe versie de oude onder dezelfde naam (de oude gaat naar de prullenmand, er komen geen dubbelen). Wordt alles weer gewist, dan verdwijnt het `_orig`-bestand.
+- **Na een update van dit script** (bv. voor het foto’s bewerken) altijd opnieuw implementeren: **Implementeren > Implementaties beheren > potlood > Versie: Nieuwe versie > Implementeren**.
 - Een punt dat in de app verwijderd wordt, verdwijnt bij de volgende synchronisatie ook uit de Sheet. De foto’s blijven in Drive staan. Een foto die in de app van een punt wordt verwijderd, gaat naar de prullenmand van Drive.
 - Wordt de sleutel gewijzigd: pas `SECRET_KEY` aan en voer de nieuwe sleutel in de app in.
 - Apps Script heeft dagelijkse quota’s (o.a. voor aanroepen en Drive-bestanden). Voor één gebruiker met enkele honderden punten en foto’s is dat ruim voldoende. Controleer de actuele limieten in de Google-documentatie.

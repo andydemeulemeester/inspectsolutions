@@ -20,6 +20,7 @@ Bij de eerste start opent het scherm **Beheer** vanzelf.
 1. **Nieuw punt**. Het tijdstip is automatisch. Het **nummer** is het hoogste bestaande nummer + 1, maar je mag het aanpassen (bv. van 6 naar 10; het volgende punt krijgt dan 11). Het moet een geheel getal van 1 of hoger zijn dat nog niet gebruikt is, anders wordt het veld rood en kun je niet opslaan.
 2. Tik op **Item 1** en zoek op code of tekst. Een tweede item kan via **Tweede item toevoegen**.
 3. **Foto nemen** of **Uit galerij** (meerdere tegelijk mogelijk). Tik op een foto om ze groot te zien, op **×** om ze te verwijderen.
+   **Foto bewerken:** tik op een foto om erop te tekenen (zie “Op een foto tekenen” hieronder). Een foto met tekening heeft een klein potloodicoon.
 4. Typ een **opmerking** indien nodig.
 5. **Status**: standaard NIET OK. Tik OK als het in orde is.
 6. **Prijs**: standaard staat € 50 geselecteerd. Tik een ander bedrag (50, 100 … 1000) of typ een eigen bedrag. Nogmaals tikken op het gekozen bedrag haalt de keuze weg.
@@ -28,6 +29,15 @@ Bij de eerste start opent het scherm **Beheer** vanzelf.
 Werkt zonder verbinding: alles wordt eerst op de gsm bewaard. Een punt blijft **Te versturen** tot de Sheet het bevestigd heeft, daarna **Verstuurd**.
 
 Een punt aanpassen of verwijderen: tik het in de lijst. De terugknop van Android sluit het formulier of de kiezer (en vraagt bevestiging als er niet-opgeslagen wijzigingen zijn).
+
+## Op een foto tekenen
+Tik in het formulier op een foto. Het scherm **Foto bewerken** opent. De foto opent niet vanzelf in de editor.
+- **Pen**: vrij tekenen. **Pijl** en **Ovaal**: sleep van begin- naar eindpunt. **Tekst**: tik op de foto, typ een korte tekst en tik **Toevoegen**.
+- **Kleur**: rood (standaard), geel, wit of zwart. **Dikte**: dun, middel of dik.
+- **Ongedaan**, **Opnieuw** en **Alles wissen** werken stap voor stap.
+- **Klaar** bewaart de tekening, **Annuleren** gooit ze weg (met een vraag als er wijzigingen zijn). De terugknop van Android doet hetzelfde als Annuleren.
+- De oorspronkelijke foto blijft altijd bewaard. Een bewerkte foto kun je later opnieuw openen en aanpassen of weer wissen.
+- Na synchronisatie staat in de Sheet de link naar de **bewerkte** foto. In Drive staat de bewerkte foto als `{nr}_{id}_{n}.jpg` en het origineel als `{nr}_{id}_{n}_orig.jpg`.
 
 ## Synchroniseren
 - Gebeurt vanzelf zodra de app open is en er verbinding is. Bij een fout probeert de app het later opnieuw.

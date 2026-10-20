@@ -25,6 +25,7 @@ Tip: kopieer het webadres en de sleutel uit je bericht en plak ze in de velden. 
 1. Tik **Nieuw punt**. Het tijdstip is automatisch. Het **nummer** is het hoogste bestaande nummer + 1, maar je mag het zelf aanpassen (bv. van 6 naar 10). Het volgende punt krijgt dan 11. Een nummer moet een geheel getal van 1 of hoger zijn en mag nog niet in gebruik zijn. Anders wordt het veld rood en kun je niet opslaan. Onder het veld staat welk nummer daarna volgt.
 2. Tik op **Item 1** en zoek op code of tekst. Een tweede item kan via **Tweede item toevoegen**.
 3. **Foto nemen** of **Uit galerij** (meerdere tegelijk kan). Tik op een foto om ze groot te zien, op **×** om ze te verwijderen.
+   **Foto bewerken:** tik op een foto om erop te tekenen. Kies **Pen**, **Pijl**, **Ovaal** of **Tekst**, een kleur (rood, geel, wit, zwart) en een dikte (dun, middel, dik). Met **Ongedaan**, **Opnieuw** en **Alles wissen** kun je stappen terugdraaien. **Klaar** bewaart de tekening, **Annuleren** gooit ze weg. De originele foto blijft altijd bewaard en een bewerkte foto herken je aan het potloodicoon.
 4. Typ een **opmerking** indien nodig.
 5. **Status**: standaard NIET OK. Tik OK als het in orde is.
 6. **Prijs**: standaard staat **€ 50** geselecteerd. Tik een ander bedrag (50, 100, 200 … 1000) of typ een eigen bedrag. Nogmaals tikken op het gekozen bedrag haalt de keuze weg.
@@ -46,6 +47,10 @@ Vink af wat je gedaan hebt en noteer wat niet werkte.
 - [ ] Verbinding invoeren en testen
 - [ ] Punt aanmaken met 1 item en 2 foto’s
 - [ ] Punt aanmaken met 2 items, opmerking, status OK en een prijs
+- [ ] Op een foto tekenen met pen, pijl, ovaal en tekst; ongedaan maken, opnieuw uitvoeren en alles wissen
+- [ ] Annuleren met niet-bewaarde tekening: de app vraagt of je de wijzigingen wilt weggooien (ook met de terugknop van de gsm)
+- [ ] Een bewerkte foto opnieuw openen en de tekening aanpassen of wissen
+- [ ] Een foto bewerken, het punt versturen en daarna de foto nog eens aanpassen: in Drive staat nog één bewerkte foto (geen dubbele) naast het origineel
 - [ ] Punt aanpassen en een foto verwijderen
 - [ ] Punt verwijderen
 - [ ] Het nummer van een nieuw punt aanpassen (bv. naar 10) en controleren dat het volgende punt 11 krijgt
@@ -64,6 +69,7 @@ Vink af wat je gedaan hebt en noteer wat niet werkte.
 **Controle in de Google Sheet**
 - [ ] Elk punt staat één keer in de Sheet, met het juiste nummer, item, opmerking, status en prijs
 - [ ] De foto’s staan in de map in Google Drive en de links in de Sheet openen de foto’s
+- [ ] Bij een bewerkte foto: de link in de Sheet opent de **bewerkte** versie, en in Drive staat ook het origineel (`…_orig.jpg`)
 - [ ] Een aangepast punt is **bijgewerkt** in de Sheet (geen extra rij)
 - [ ] Een verwijderd punt is uit de Sheet verdwenen
 
