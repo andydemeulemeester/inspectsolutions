@@ -64,25 +64,31 @@ function upsert_(rec) {
   var id = cleanId_(rec && rec.id);
   var nr = Number(rec.nr);
   var sh = sheet_();
-  var keep = {}, maxN = Number(rec.seq) || 0;
+  var keep = {}, edited = {}, maxN = Number(rec.seq) || 0;
   (rec.photos || []).forEach(function (n) { n = Number(n); keep[n] = true; if (n > maxN) maxN = n; });
+  (rec.edited || []).forEach(function (n) { edited[Number(n)] = true; });
 
-  // Is het nummer van het punt gewijzigd, hernoem dan de bestaande foto's naar het nieuwe nummer.
+  // Is het nummer van het punt gewijzigd, hernoem dan de bestaande foto's (ook de originelen) naar het nieuwe nummer.
   var prevNr = Number(rec.prevNr);
   if (prevNr > 0 && prevNr !== nr) {
     for (var k = 1; k <= maxN; k++) {
-      var old = photoFile_(prevNr, id, k);
-      if (old && !photoFile_(nr, id, k)) old.setName(photoName_(nr, id, k));
+      [false, true].forEach(function (isOrig) {
+        var old = photoFile_(prevNr, id, k, isOrig);
+        if (old && !photoFile_(nr, id, k, isOrig)) old.setName(photoName_(nr, id, k, isOrig));
+      });
     }
   }
 
-  // Foto's die op het toestel verwijderd zijn, gaan naar de prullenmand van Drive.
-  // Bestandsnamen zijn exact bekend ({nr}_{id}_{n}.jpg), dus we zoeken op exacte naam.
+  // Bestandsnamen zijn exact bekend ({nr}_{id}_{n}.jpg en {nr}_{id}_{n}_orig.jpg), dus we zoeken op exacte naam.
+  // - Foto's die op het toestel verwijderd zijn, gaan met hun origineel naar de prullenmand van Drive.
+  // - Een foto die niet (meer) bewerkt is, heeft geen origineel-bestand meer nodig.
+  // - De Sheet krijgt enkel de link naar de bewerkte (of enige) versie.
   var links = [];
   for (var n = 1; n <= maxN; n++) {
-    var f = photoFile_(nr, id, n);
-    if (!f) continue;
-    if (keep[n]) links.push(f.getUrl()); else f.setTrashed(true);
+    if (!keep[n]) { trashPhoto_(nr, id, n, false); trashPhoto_(nr, id, n, true); continue; }
+    var f = photoFile_(nr, id, n, false);
+    if (f) links.push(f.getUrl());
+    if (!edited[n]) trashPhoto_(nr, id, n, true);
   }
 
   var price = (rec.price === '' || rec.price === null || rec.price === undefined) ? '' : Number(rec.price);
@@ -112,12 +118,13 @@ function photo_(req) {
   var nr = Number(req.nr);
   var n = Number(req.n);
   if (!(n > 0)) throw new Error('Ongeldig fotonummer.');
-  var file = photoFile_(nr, id, n);
-  if (!file) {
-    var blob = Utilities.newBlob(Utilities.base64Decode(req.data), 'image/jpeg', photoName_(nr, id, n));
-    file = folder_().createFile(blob);
-  }
-  addPhotoLink_(id, file.getUrl());
+  var isOrig = req.orig === true;
+  // Bestaat het bestand al (bv. de foto is na synchronisatie bewerkt of een verzoek is herhaald), dan gaat de oude
+  // naar de prullenmand en komt de nieuwe onder dezelfde naam. Zo blijft er altijd precies één bestand per naam.
+  trashPhoto_(nr, id, n, isOrig);
+  var blob = Utilities.newBlob(Utilities.base64Decode(req.data), 'image/jpeg', photoName_(nr, id, n, isOrig));
+  folder_().createFile(blob);
+  if (!isOrig) refreshPhotoCell_(id, nr, Math.max(Number(req.seq) || 0, n));
   return { ok: true, id: id, n: n };
 }
 
@@ -145,30 +152,43 @@ function codes_(list) {
 
 /* ---------- Hulpfuncties ---------- */
 
-/** Voegt een foto-link toe aan de cel van het punt (als die er nog niet in staat). */
-function addPhotoLink_(id, url) {
+/** Zet de links van de foto's (bewerkte of enige versie) opnieuw in de cel van het punt. */
+function refreshPhotoCell_(id, nr, maxN) {
   var sh = sheet_();
   var row = findRow_(sh, id);
   if (!row) return;
+  var links = [];
+  for (var n = 1; n <= maxN; n++) {
+    var f = photoFile_(nr, id, n, false);
+    if (f) links.push(f.getUrl());
+  }
   var cell = sh.getRange(row, COL_PHOTOS);
-  var cur = String(cell.getValue() || '');
-  if (cur.split('\n').indexOf(url) !== -1) return;
   cell.setNumberFormat('@');
-  cell.setValue(cur ? cur + '\n' + url : url);
+  cell.setValue(links.join('\n'));
 }
 
-function photoName_(nr, id, n) {
-  return nr + '_' + id + '_' + n + '.jpg';
+/** {nr}_{id}_{n}.jpg voor de bewerkte (of enige) versie, {nr}_{id}_{n}_orig.jpg voor het origineel. */
+function photoName_(nr, id, n, isOrig) {
+  return nr + '_' + id + '_' + n + (isOrig ? '_orig' : '') + '.jpg';
 }
 
 /** Zoekt een foto op exacte bestandsnaam (zonder die in de prullenmand). */
-function photoFile_(nr, id, n) {
-  var it = folder_().getFilesByName(photoName_(nr, id, n));
+function photoFile_(nr, id, n, isOrig) {
+  var it = folder_().getFilesByName(photoName_(nr, id, n, isOrig));
   while (it.hasNext()) {
     var f = it.next();
     if (!f.isTrashed()) return f;
   }
   return null;
+}
+
+/** Gooit alle bestanden met deze naam in de prullenmand. */
+function trashPhoto_(nr, id, n, isOrig) {
+  var it = folder_().getFilesByName(photoName_(nr, id, n, isOrig));
+  while (it.hasNext()) {
+    var f = it.next();
+    if (!f.isTrashed()) f.setTrashed(true);
+  }
 }
 
 function findRow_(sh, id) {

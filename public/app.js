@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.0.6"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.1.0"; /* houd gelijk met VERSION in sw.js */
 
 var $ = function(s){ return document.querySelector(s); };
 var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
@@ -110,6 +110,28 @@ function codesToText(list){
   return list.map(function(c){ return c.code + " | " + c.label; }).join("\n");
 }
 
+/* ---------- Foto's: vorm van een foto in een record ----------
+   { pid, blob, orig, ops, ver, up, upOrig }
+   blob  = de versie die getoond en verstuurd wordt (bewerkt, of het origineel als er niets getekend is)
+   orig  = het onbewerkte origineel, enkel ingevuld als de foto bewerkt is (anders null, om opslag te sparen)
+   ops   = de tekenacties (JSON), ver = teller die bij elke bewerking omhooggaat
+   up / upOrig = is blob / orig al bevestigd door de server.
+   Oudere records (lijst van Blobs, of {pid, blob, up} zonder de rest) worden bij het lezen omgezet. */
+function normPhoto(p, i){
+  if(typeof Blob !== "undefined" && p instanceof Blob) return {pid: i + 1, blob: p, orig: null, ops: [], ver: 0, up: false, upOrig: false};
+  if(!Array.isArray(p.ops)) p.ops = [];
+  if(p.orig === undefined) p.orig = null;
+  p.ver = p.ver || 0; p.up = !!p.up; p.upOrig = !!p.upOrig;
+  return p;
+}
+function normRecord(r){
+  if(!r || r.tomb) return r;
+  r.photos = (r.photos || []).map(normPhoto);
+  r.photoSeq = Math.max(r.photoSeq || 0, r.photos.reduce(function(m, p){ return Math.max(m, p.pid); }, 0));
+  return r;
+}
+function isEdited(p){ return !!(p.ops && p.ops.length); }
+
 /* ---------- Opslag: IndexedDB, met geheugen als noodoplossing ---------- */
 var Store = (function(){
   var db = null, useMem = false;
@@ -151,12 +173,12 @@ var Store = (function(){
   return {
     open: open,
     all: function(){
-      if(useMem) return Promise.resolve(Object.keys(mem.records).map(function(k){ return mem.records[k]; }));
-      return tx("records", "readonly", function(t){ var r = t.objectStore("records").getAll(); return function(){ return r.result; }; });
+      if(useMem) return Promise.resolve(Object.keys(mem.records).map(function(k){ return normRecord(mem.records[k]); }));
+      return tx("records", "readonly", function(t){ var r = t.objectStore("records").getAll(); return function(){ return r.result.map(normRecord); }; });
     },
     get: function(id){
-      if(useMem) return Promise.resolve(mem.records[id]);
-      return tx("records", "readonly", function(t){ var r = t.objectStore("records").get(id); return function(){ return r.result; }; });
+      if(useMem) return Promise.resolve(normRecord(mem.records[id]));
+      return tx("records", "readonly", function(t){ var r = t.objectStore("records").get(id); return function(){ return normRecord(r.result); }; });
     },
     put: function(rec){
       if(useMem){ mem.records[rec.id] = rec; return Promise.resolve(); }
@@ -173,7 +195,7 @@ var Store = (function(){
     /* lezen-wijzigen-schrijven in één transactie, zodat gelijktijdige wijzigingen elkaar niet overschrijven */
     update: function(id, fn){
       if(useMem){
-        var m = mem.records[id];
+        var m = normRecord(mem.records[id]);
         if(!m) return Promise.resolve(undefined);
         mem.records[id] = fn(m) || m;
         return Promise.resolve(mem.records[id]);
@@ -183,6 +205,7 @@ var Store = (function(){
         s.get(id).onsuccess = function(e){
           var rec = e.target.result;
           if(!rec || rec.tomb) return;
+          rec = normRecord(rec);
           out = fn(rec) || rec;
           s.put(out);
         };
@@ -202,6 +225,7 @@ var Store = (function(){
        Is het nummer al in gebruik: fout met .dup = nummer, of (autoNr) automatisch het hoogste nummer + 1. */
     commit: function(id, build, autoNr){
       function run(all){
+        all = all.map(normRecord);
         var existing = all.filter(function(r){ return r.id === id && !r.tomb; })[0];
         var rec = build(existing);
         if(!rec) return null;
@@ -255,7 +279,7 @@ function fmtFull(iso){
 }
 function euro(n){ return "€ " + Number(n).toLocaleString("nl-BE"); }
 function isSynced(r){
-  return (r.syncedRev || 0) === r.rev && (r.photos || []).every(function(p){ return p.up; });
+  return (r.syncedRev || 0) === r.rev && (r.photos || []).every(function(p){ return p.up && (!isEdited(p) || p.upOrig); });
 }
 function pendingRecords(){ return records.filter(function(r){ return !isSynced(r); }).length; }
 function pendingAll(){ return pendingRecords() + tombCount + (codesDirty ? 1 : 0); }
@@ -434,7 +458,9 @@ async function openForm(rec){
     draft = {
       id: rec.id, isNew: false, nr: rec.nr, created: rec.created,
       items: [rec.items[0] || null, rec.items[1] || null],
-      photos: (rec.photos || []).map(function(p){ return {pid: p.pid, up: !!p.up, blob: p.blob, url: URL.createObjectURL(p.blob)}; }),
+      photos: (rec.photos || []).map(function(p){
+        return {pid: p.pid, up: p.up, upOrig: p.upOrig, blob: p.blob, orig: p.orig, ops: p.ops, ver: p.ver, dirty: false, url: URL.createObjectURL(p.blob)};
+      }),
       photoSeq: rec.photoSeq || 0,
       note: rec.note || "", status: rec.status, price: rec.price
     };
@@ -513,7 +539,7 @@ async function addFiles(fileList){
     try{
       var blob = await shrink(files[i]);
       if(!draft) return;
-      draft.photos.push({pid: ++draft.photoSeq, up: false, blob: blob, url: URL.createObjectURL(blob)});
+      draft.photos.push({pid: ++draft.photoSeq, up: false, upOrig: false, blob: blob, orig: null, ops: [], ver: 0, dirty: true, url: URL.createObjectURL(blob)});
     }catch(e){
       toast("Een foto kon niet verwerkt worden.");
     }
@@ -549,22 +575,33 @@ async function saveDraft(){
     draft.note = $("#note").value.trim();
     var now = new Date().toISOString();
     var d = draft;
-    var photos = d.photos.map(function(p){ return {pid: p.pid, blob: p.blob, up: !!p.up}; });
     var items = d.items.filter(Boolean);
+    /* Een foto die in dit formulier nieuw of bewerkt is, moet opnieuw verstuurd worden. Een ongewijzigde foto neemt de
+       synchronisatiestatus over die de synchronisatie intussen in de opslag zette (zolang het dezelfde versie is). */
+    var buildPhotos = function(latest){
+      var byPid = {};
+      (latest || []).forEach(function(q){ byPid[q.pid] = q; });
+      return d.photos.map(function(p){
+        var l = byPid[p.pid], same = !!l && (l.ver || 0) === (p.ver || 0);
+        return {
+          pid: p.pid, blob: p.blob, orig: p.orig || null, ops: p.ops || [], ver: p.ver || 0,
+          up: p.dirty ? false : !!(p.up || (same && l.up)),
+          upOrig: p.dirty ? !!p.upOrig : !!(p.upOrig || (same && l.upOrig))
+        };
+      });
+    };
     var wasNew = d.isNew;
     var saved = await Store.commit(d.id, function(x){
       if(wasNew){
         return {
-          id: d.id, nr: nrRes.nr, created: d.created, items: items, photos: photos, photoSeq: d.photoSeq,
+          id: d.id, nr: nrRes.nr, created: d.created, items: items, photos: buildPhotos(null), photoSeq: d.photoSeq,
           note: d.note, status: d.status, price: d.price, rev: 1, syncedRev: 0, updated: now
         };
       }
       if(!x) return null;
-      var upMap = {};
-      (x.photos || []).forEach(function(p){ if(p.up) upMap[p.pid] = true; });
       x.nr = nrRes.nr;
       x.items = items;
-      x.photos = photos.map(function(p){ return {pid: p.pid, blob: p.blob, up: !!(p.up || upMap[p.pid])}; });
+      x.photos = buildPhotos(x.photos);
       x.photoSeq = Math.max(x.photoSeq || 0, d.photoSeq);
       x.note = d.note; x.status = d.status; x.price = d.price;
       x.rev = (x.rev || 0) + 1;
@@ -653,16 +690,27 @@ async function syncStep(r){
       id: r.id, nr: r.nr, prevNr: r.syncedNr || 0, created: r.created,
       item1: itemText(r.items[0]), item2: itemText(r.items[1]),
       note: r.note || "", status: r.status, price: r.price == null ? "" : r.price,
-      photos: (r.photos || []).map(function(p){ return p.pid; }), seq: r.photoSeq || 0
+      photos: (r.photos || []).map(function(p){ return p.pid; }),
+      edited: (r.photos || []).filter(isEdited).map(function(p){ return p.pid; }),
+      seq: r.photoSeq || 0
     }});
     await Store.update(r.id, function(x){ if((x.syncedRev || 0) < rev){ x.syncedRev = rev; x.syncedNr = nrSent; } });
     return;
   }
-  var p = (r.photos || []).filter(function(q){ return !q.up; })[0];
+  /* één foto per request: eerst de te tonen versie (bewerkt of enige), daarna het origineel van bewerkte foto's.
+     De vlag wordt enkel gezet als de foto intussen niet opnieuw bewerkt is (zelfde ver). */
+  var photos = r.photos || [];
+  var p = photos.filter(function(q){ return !q.up; })[0], sendOrig = false;
+  if(!p){ p = photos.filter(function(q){ return isEdited(q) && !q.upOrig; })[0]; sendOrig = true; }
   if(p){
-    var data = await blobToBase64(p.blob);
-    await post({action: "photo", id: r.id, nr: r.nr, n: p.pid, data: data});
-    await Store.update(r.id, function(x){ (x.photos || []).forEach(function(q){ if(q.pid === p.pid) q.up = true; }); });
+    var ver = p.ver || 0, blob = sendOrig ? p.orig : p.blob;
+    var data = await blobToBase64(blob);
+    await post({action: "photo", id: r.id, nr: r.nr, n: p.pid, orig: sendOrig, seq: r.photoSeq || 0, data: data});
+    await Store.update(r.id, function(x){
+      (x.photos || []).forEach(function(q){
+        if(q.pid === p.pid && (q.ver || 0) === ver){ if(sendOrig) q.upOrig = true; else q.up = true; }
+      });
+    });
   }
 }
 
