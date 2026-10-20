@@ -1,0 +1,9 @@
+{
+  "name": "inspectsolutions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Offline-first PWA voor een controlerondgang",
+  "devDependencies": {
+    "wrangler": "^4.135.0"
+  }
+}
