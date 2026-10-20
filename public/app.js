@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.0.5"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.0.6"; /* houd gelijk met VERSION in sw.js */
 
 var $ = function(s){ return document.querySelector(s); };
 var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
@@ -144,7 +144,7 @@ var Store = (function(){
       try{ getResult = fn(t); }catch(e){ try{ t.abort(); }catch(x){} reject(e); return; }
       t.oncomplete = function(){ resolve(getResult ? getResult() : undefined); };
       t.onerror = function(){ reject(t.error); };
-      t.onabort = function(){ reject(t.error); };
+      t.onabort = function(){ reject(t.error || t.myError); };
     });
   }
 
@@ -197,16 +197,35 @@ var Store = (function(){
       if(useMem){ mem.meta[key] = value; return Promise.resolve(); }
       return tx("meta", "readwrite", function(t){ t.objectStore("meta").put({key: key, value: value}); });
     },
-    /* volgend nummer: atomair, dus nooit dubbel, ook niet met meerdere tabbladen */
-    nextNr: function(){
-      if(useMem){ mem.meta.counter = (mem.meta.counter || 0) + 1; return Promise.resolve(mem.meta.counter); }
-      return tx("meta", "readwrite", function(t){
-        var s = t.objectStore("meta"), n = 0;
-        s.get("counter").onsuccess = function(e){
-          n = (e.target.result ? e.target.result.value : 0) + 1;
-          s.put({key: "counter", value: n});
+    /* Punt opslaan met controle op een uniek nummer, alles in één transactie (dus ook veilig met meerdere tabbladen).
+       build(bestaand) geeft het nieuwe record terug (of niets als het punt niet meer bestaat).
+       Is het nummer al in gebruik: fout met .dup = nummer, of (autoNr) automatisch het hoogste nummer + 1. */
+    commit: function(id, build, autoNr){
+      function run(all){
+        var existing = all.filter(function(r){ return r.id === id && !r.tomb; })[0];
+        var rec = build(existing);
+        if(!rec) return null;
+        var others = all.filter(function(r){ return !r.tomb && r.id !== rec.id; });
+        if(others.some(function(r){ return r.nr === rec.nr; })){
+          if(!autoNr){ var err = new Error("nummer in gebruik"); err.dup = rec.nr; throw err; }
+          rec.nr = others.reduce(function(m, r){ return Math.max(m, r.nr); }, 0) + 1;
+        }
+        return rec;
+      }
+      if(useMem){
+        try{
+          var m = run(Object.keys(mem.records).map(function(k){ return mem.records[k]; }));
+          if(m) mem.records[m.id] = m;
+          return Promise.resolve(m);
+        }catch(e){ return Promise.reject(e); }
+      }
+      return tx("records", "readwrite", function(t){
+        var s = t.objectStore("records"), out = null;
+        s.getAll().onsuccess = function(e){
+          try{ out = run(e.target.result); if(out) s.put(out); }
+          catch(err){ t.myError = err; t.abort(); }
         };
-        return function(){ return n; };
+        return function(){ return out; };
       });
     }
   };
@@ -218,7 +237,8 @@ var filter = "all";
 var draft = null, showItem2 = false, pickSlot = 0, saving = false;
 var forceOff = false, syncing = false, syncErr = "";
 var stack = [], view = "List", listScroll = 0, discardOk = false, draftSnap = "";
-var PRICES = [100,200,300,400,500,600,700,800,900,1000];
+var PRICES = [50,100,200,300,400,500,600,700,800,900,1000];
+var DEFAULT_PRICE = 50;
 var channel = null;
 
 function isOnline(){ return navigator.onLine !== false && !forceOff; }
@@ -350,7 +370,7 @@ function formDirty(){
 function draftSnapshot(){
   return JSON.stringify([
     draft.items.map(function(i){ return i ? i.code : null; }),
-    $("#note").value.trim(), draft.status, draft.price, draft.photos.length
+    $("#note").value.trim(), draft.status, draft.price, draft.photos.length, $("#fNr").value.trim()
   ]);
 }
 function layerClosed(name){
@@ -378,9 +398,35 @@ window.addEventListener("popstate", function(e){
 /* ---------- Formulier ---------- */
 function blankDraft(){
   return {
-    id: uid(), isNew: true, nr: null, created: new Date().toISOString(),
-    items: [null, null], photos: [], photoSeq: 0, note: "", status: "NIET OK", price: null
+    id: uid(), isNew: true, nr: null, nrTouched: false, created: new Date().toISOString(),
+    items: [null, null], photos: [], photoSeq: 0, note: "", status: "NIET OK", price: DEFAULT_PRICE
   };
+}
+
+/* ---------- Volgnummer ---------- */
+/* het volgende nummer is altijd het hoogste bestaande nummer + 1 (zonder het punt dat je zelf bewerkt) */
+function highestNr(excludeId){
+  return records.reduce(function(m, r){ return r.id === excludeId ? m : Math.max(m, r.nr); }, 0);
+}
+function readNr(){
+  var v = $("#fNr").value.trim();
+  if(!/^\d+$/.test(v) || Number(v) < 1) return {ok: false, msg: "Vul een geheel nummer in (1 of hoger)."};
+  var n = Number(v);
+  if(records.some(function(r){ return r.nr === n && r.id !== draft.id; })) return {ok: false, msg: "Nummer " + n + " is al in gebruik."};
+  return {ok: true, nr: n};
+}
+function renderNr(){
+  var res = readNr(), inp = $("#fNr"), hint = $("#nrHint");
+  inp.classList.toggle("invalid", !res.ok);
+  inp.setAttribute("aria-invalid", res.ok ? "false" : "true");
+  hint.classList.toggle("bad", !res.ok);
+  if(res.ok){
+    draft.nr = res.nr;
+    hint.textContent = "Het volgende punt krijgt nummer " + (Math.max(highestNr(draft.id), res.nr) + 1) + ".";
+  }else{
+    hint.textContent = res.msg;
+  }
+  return res;
 }
 async function openForm(rec){
   if(stack.indexOf("form") >= 0) return;
@@ -394,10 +440,11 @@ async function openForm(rec){
     };
   }else{
     draft = blankDraft();
-    draft.nr = ((await Store.getMeta("counter")) || 0) + 1;
+    draft.nr = highestNr() + 1;
   }
   showItem2 = !!draft.items[1];
-  $("#fNr").textContent = "#" + draft.nr;
+  $("#fNr").value = draft.nr;
+  renderNr();
   $("#fTime").textContent = "Aangemaakt " + fmtFull(draft.created);
   $("#note").value = draft.note;
   $("#price").value = draft.price == null ? "" : draft.price;
@@ -494,36 +541,38 @@ function renderPick(q){
 /* opslaan */
 async function saveDraft(){
   if(!draft || saving) return;
+  var nrRes = renderNr();
+  if(!nrRes.ok){ toast(nrRes.msg); $("#fNr").focus(); return; }
   if(!draft.items[0]){ toast("Kies eerst een item."); return; }
   saving = true;
   try{
     draft.note = $("#note").value.trim();
     var now = new Date().toISOString();
-    var photos = draft.photos.map(function(p){ return {pid: p.pid, blob: p.blob, up: !!p.up}; });
-    var items = draft.items.filter(Boolean);
-    var nr, wasNew = draft.isNew;
-    if(wasNew){
-      nr = await Store.nextNr();
-      await Store.put({
-        id: draft.id, nr: nr, created: draft.created, items: items, photos: photos, photoSeq: draft.photoSeq,
-        note: draft.note, status: draft.status, price: draft.price, rev: 1, syncedRev: 0, updated: now
-      });
-    }else{
-      var d = draft;
-      var res = await Store.update(d.id, function(x){
-        var upMap = {};
-        (x.photos || []).forEach(function(p){ if(p.up) upMap[p.pid] = true; });
-        x.items = items;
-        x.photos = photos.map(function(p){ return {pid: p.pid, blob: p.blob, up: !!(p.up || upMap[p.pid])}; });
-        x.photoSeq = Math.max(x.photoSeq || 0, d.photoSeq);
-        x.note = d.note; x.status = d.status; x.price = d.price;
-        x.rev = (x.rev || 0) + 1;
-        x.updated = now;
-        return x;
-      });
-      if(!res){ toast("Dit punt bestaat niet meer."); saving = false; return; }
-      nr = res.nr;
-    }
+    var d = draft;
+    var photos = d.photos.map(function(p){ return {pid: p.pid, blob: p.blob, up: !!p.up}; });
+    var items = d.items.filter(Boolean);
+    var wasNew = d.isNew;
+    var saved = await Store.commit(d.id, function(x){
+      if(wasNew){
+        return {
+          id: d.id, nr: nrRes.nr, created: d.created, items: items, photos: photos, photoSeq: d.photoSeq,
+          note: d.note, status: d.status, price: d.price, rev: 1, syncedRev: 0, updated: now
+        };
+      }
+      if(!x) return null;
+      var upMap = {};
+      (x.photos || []).forEach(function(p){ if(p.up) upMap[p.pid] = true; });
+      x.nr = nrRes.nr;
+      x.items = items;
+      x.photos = photos.map(function(p){ return {pid: p.pid, blob: p.blob, up: !!(p.up || upMap[p.pid])}; });
+      x.photoSeq = Math.max(x.photoSeq || 0, d.photoSeq);
+      x.note = d.note; x.status = d.status; x.price = d.price;
+      x.rev = (x.rev || 0) + 1;
+      x.updated = now;
+      return x;
+    }, wasNew && !d.nrTouched);
+    if(!saved){ toast("Dit punt bestaat niet meer."); saving = false; return; }
+    var nr = saved.nr;
     await load();
     leaveForm();
     renderAll();
@@ -532,7 +581,14 @@ async function saveDraft(){
     requestPersist();
     trySync(false);
   }catch(e){
-    toast("Opslaan mislukt. Probeer opnieuw.");
+    if(e && e.dup){
+      /* een ander venster nam dit nummer net in gebruik */
+      await load();
+      renderNr();
+      toast("Nummer " + e.dup + " is al in gebruik.");
+    }else{
+      toast("Opslaan mislukt. Probeer opnieuw.");
+    }
   }
   saving = false;
 }
@@ -592,14 +648,14 @@ function itemText(it){ return it ? it.code + " | " + it.label : ""; }
 /* één stap voor één punt: eerst de tekst, daarna de foto's één voor één */
 async function syncStep(r){
   if((r.syncedRev || 0) !== r.rev){
-    var rev = r.rev;
+    var rev = r.rev, nrSent = r.nr;
     await post({action: "upsert", record: {
-      id: r.id, nr: r.nr, created: r.created,
+      id: r.id, nr: r.nr, prevNr: r.syncedNr || 0, created: r.created,
       item1: itemText(r.items[0]), item2: itemText(r.items[1]),
       note: r.note || "", status: r.status, price: r.price == null ? "" : r.price,
       photos: (r.photos || []).map(function(p){ return p.pid; }), seq: r.photoSeq || 0
     }});
-    await Store.update(r.id, function(x){ if((x.syncedRev || 0) < rev) x.syncedRev = rev; });
+    await Store.update(r.id, function(x){ if((x.syncedRev || 0) < rev){ x.syncedRev = rev; x.syncedNr = nrSent; } });
     return;
   }
   var p = (r.photos || []).filter(function(q){ return !q.up; })[0];
@@ -708,7 +764,6 @@ function openCodes(){
   $("#codesTa").value = codesToText(codes);
   $("#codesCount").textContent = codes.length + " items";
   $("#btnWipe").textContent = "Alle punten wissen";
-  $("#btnRenum").textContent = "Nummering herstarten";
   $("#cfgUrl").value = cfg ? cfg.url : "";
   $("#cfgKey").value = "";
   $("#cfgKeyHint").textContent = cfg ? "Een sleutel is opgeslagen. Laat leeg om die te houden." : "";
@@ -953,18 +1008,11 @@ function bind(){
       : "Tik nogmaals om alles te wissen";
     armButton($("#btnWipe"), label, async function(){
       await Store.clear();
-      await Store.setMeta("counter", 0);
       await load();
       renderAll(); back(); notifyOthers(); toast("Alle punten gewist. Nummering start opnieuw bij 1.");
     });
   });
-  $("#btnRenum").addEventListener("click", function(){
-    armButton($("#btnRenum"), "Tik nogmaals om de nummering te herstarten", async function(){
-      await Store.setMeta("counter", 0);
-      $("#btnRenum").textContent = "Nummering herstarten";
-      toast("Nummering start opnieuw bij 1.");
-    });
-  });
+  $("#fNr").addEventListener("input", function(){ if(draft){ draft.nrTouched = true; renderNr(); } });
   $("#btnCfgTest").addEventListener("click", testCfg);
   $("#btnCfgSave").addEventListener("click", saveCfg);
 }

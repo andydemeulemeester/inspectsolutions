@@ -17,12 +17,12 @@ Bij de eerste start opent het scherm **Beheer** vanzelf.
 - Staat er “Nieuwe versie beschikbaar”? Tik **Nu bijwerken**. Uw punten blijven bewaard.
 
 ## Tijdens de rondgang
-1. **Nieuw punt**. Het nummer en het tijdstip zijn automatisch.
+1. **Nieuw punt**. Het tijdstip is automatisch. Het **nummer** is het hoogste bestaande nummer + 1, maar je mag het aanpassen (bv. van 6 naar 10; het volgende punt krijgt dan 11). Het moet een geheel getal van 1 of hoger zijn dat nog niet gebruikt is, anders wordt het veld rood en kun je niet opslaan.
 2. Tik op **Item 1** en zoek op code of tekst. Een tweede item kan via **Tweede item toevoegen**.
 3. **Foto nemen** of **Uit galerij** (meerdere tegelijk mogelijk). Tik op een foto om ze groot te zien, op **×** om ze te verwijderen.
 4. Typ een **opmerking** indien nodig.
 5. **Status**: standaard NIET OK. Tik OK als het in orde is.
-6. **Prijs**: tik een bedrag. Nogmaals tikken haalt de keuze weg. Of typ een eigen bedrag.
+6. **Prijs**: standaard staat € 50 geselecteerd. Tik een ander bedrag (50, 100 … 1000) of typ een eigen bedrag. Nogmaals tikken op het gekozen bedrag haalt de keuze weg.
 7. **Punt opslaan**.
 
 Werkt zonder verbinding: alles wordt eerst op de gsm bewaard. Een punt blijft **Te versturen** tot de Sheet het bevestigd heeft, daarna **Verstuurd**.
@@ -37,7 +37,7 @@ Een punt aanpassen of verwijderen: tik het in de lijst. De terugknop van Android
 ## Beheer
 - **Codelijst**: één item per regel als `CODE | omschrijving`. Bestaande punten behouden hun oorspronkelijke code en tekst.
 - **Alle punten wissen**: enkel gebruiken als alles verstuurd is. Vraagt twee keer bevestiging.
-- **Nummering herstarten**: laat de teller opnieuw bij 1 beginnen (bv. voor een nieuwe rondgang).
+- **Nummering**: het volgende nummer is altijd het hoogste bestaande nummer + 1. Na “Alle punten wissen” begint de nummering dus weer bij 1.
 
 ## Problemen
 | Probleem | Oplossing |

@@ -14,7 +14,7 @@ Serveer `public/` via een lokale webserver (service worker en IndexedDB vragen `
 
 ## Technische keuzes
 - Vanilla JS, geen externe afhankelijkheden. Alles staat in de service-worker-cache.
-- Wachtrij: een punt is “Verstuurd” pas als de server de tekst én alle foto’s bevestigd heeft (`syncedRev === rev` en elke foto `up`). Tekst eerst (upsert op `id`), dan één foto per request; herhaling met oplopende wachttijd (5 s tot 5 min). Meerdere tabbladen: één sync tegelijk (Web Locks), nummers atomair uit een teller in IndexedDB.
+- Wachtrij: een punt is “Verstuurd” pas als de server de tekst én alle foto’s bevestigd heeft (`syncedRev === rev` en elke foto `up`). Tekst eerst (upsert op `id`), dan één foto per request; herhaling met oplopende wachttijd (5 s tot 5 min). Meerdere tabbladen: één sync tegelijk (Web Locks), het volgnummer wordt afgeleid uit de bestaande punten (hoogste + 1), is aanpasbaar en wordt bij het opslaan in één IndexedDB-transactie op uniekheid gecontroleerd. Een gewijzigd nummer werkt de bestaande rij bij (upsert op `id`) en hernoemt de foto’s in Drive (`prevNr`).
 - Verwijderen gebruikt een “grafsteen” zodat de rij ook uit de Sheet verdwijnt.
 - Updates: nieuwe service worker wacht tot de gebruiker bijwerkt; oude versie blijft werken. **Verhoog `VERSION` in `sw.js` én `app.js` bij elke release.**
 - URL en sleutel staan nergens in de code; ze worden in Beheer ingevoerd en lokaal bewaard.

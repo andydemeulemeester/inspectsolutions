@@ -67,6 +67,15 @@ function upsert_(rec) {
   var keep = {}, maxN = Number(rec.seq) || 0;
   (rec.photos || []).forEach(function (n) { n = Number(n); keep[n] = true; if (n > maxN) maxN = n; });
 
+  // Is het nummer van het punt gewijzigd, hernoem dan de bestaande foto's naar het nieuwe nummer.
+  var prevNr = Number(rec.prevNr);
+  if (prevNr > 0 && prevNr !== nr) {
+    for (var k = 1; k <= maxN; k++) {
+      var old = photoFile_(prevNr, id, k);
+      if (old && !photoFile_(nr, id, k)) old.setName(photoName_(nr, id, k));
+    }
+  }
+
   // Foto's die op het toestel verwijderd zijn, gaan naar de prullenmand van Drive.
   // Bestandsnamen zijn exact bekend ({nr}_{id}_{n}.jpg), dus we zoeken op exacte naam.
   var links = [];

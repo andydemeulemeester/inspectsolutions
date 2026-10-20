@@ -22,12 +22,12 @@ Bij de eerste start opent het scherm **Beheer** vanzelf.
 Tip: kopieer het webadres en de sleutel uit je bericht en plak ze in de velden. Zo vermijd je typfouten.
 
 ## 3. Een punt invoeren
-1. Tik **Nieuw punt**. Het nummer en het tijdstip zijn automatisch.
+1. Tik **Nieuw punt**. Het tijdstip is automatisch. Het **nummer** is het hoogste bestaande nummer + 1, maar je mag het zelf aanpassen (bv. van 6 naar 10). Het volgende punt krijgt dan 11. Een nummer moet een geheel getal van 1 of hoger zijn en mag nog niet in gebruik zijn. Anders wordt het veld rood en kun je niet opslaan. Onder het veld staat welk nummer daarna volgt.
 2. Tik op **Item 1** en zoek op code of tekst. Een tweede item kan via **Tweede item toevoegen**.
 3. **Foto nemen** of **Uit galerij** (meerdere tegelijk kan). Tik op een foto om ze groot te zien, op **×** om ze te verwijderen.
 4. Typ een **opmerking** indien nodig.
 5. **Status**: standaard NIET OK. Tik OK als het in orde is.
-6. **Prijs**: tik een bedrag. Nogmaals tikken haalt de keuze weg. Of typ een eigen bedrag.
+6. **Prijs**: standaard staat **€ 50** geselecteerd. Tik een ander bedrag (50, 100, 200 … 1000) of typ een eigen bedrag. Nogmaals tikken op het gekozen bedrag haalt de keuze weg.
 7. Tik **Punt opslaan**.
 
 Een punt aanpassen of verwijderen: tik het in de lijst. De terugknop van Android sluit het formulier of de kiezer.
@@ -48,6 +48,9 @@ Vink af wat je gedaan hebt en noteer wat niet werkte.
 - [ ] Punt aanmaken met 2 items, opmerking, status OK en een prijs
 - [ ] Punt aanpassen en een foto verwijderen
 - [ ] Punt verwijderen
+- [ ] Het nummer van een nieuw punt aanpassen (bv. naar 10) en controleren dat het volgende punt 11 krijgt
+- [ ] Een nummer proberen dat al bestaat: het veld wordt rood en opslaan lukt niet
+- [ ] Het nummer van een bestaand punt wijzigen: in de Sheet verandert die rij, er komt geen extra rij bij
 - [ ] Zoeken in de itemlijst op code en op tekst
 - [ ] Filter Alle / NIET OK / OK in de lijst
 

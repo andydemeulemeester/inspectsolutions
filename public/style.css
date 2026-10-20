@@ -148,6 +148,11 @@ html.env-dev .sim{display:flex}
 .formhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:6px}
 .bignr{font-size:44px;font-weight:850;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
 .right{text-align:right}
+.formhead label{display:block;margin-bottom:2px}
+.nrinput{width:150px !important;font-size:34px;font-weight:850;letter-spacing:-.03em;font-variant-numeric:tabular-nums;padding:6px 12px !important;-moz-appearance:textfield}
+.nrinput.invalid{border-color:var(--bad) !important;color:var(--bad);background:var(--bad-bg) !important}
+.nrhint{margin-top:6px;color:var(--muted)}
+.nrhint.bad{color:var(--bad);font-weight:650}
 .field{margin-top:18px}
 .field > label,.lab{display:block;font-weight:700;margin-bottom:8px;font-size:15px}
 .row{display:flex;gap:10px}
