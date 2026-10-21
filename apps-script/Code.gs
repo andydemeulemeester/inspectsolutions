@@ -1,32 +1,43 @@
 /**
  * InspectSolutions – Apps Script web-app
- * Ontvangt punten en foto's van de PWA en schrijft ze naar een Google Sheet en een Drive-map.
+ * Ontvangt projecten, punten en foto's van de PWA. Per project maakt het script zelf een Google Sheet en een
+ * fotomap aan in Drive:
  *
- * Gebonden aan de Sheet (Extensies > Apps Script). Zie ../docs/01-installatie-apps-script.md.
+ *   {hoofdmap}/{projectnummer}_{naam}_{jjjjmmdd}/
+ *       {projectnummer}_{naam}_{jjjjmmdd}      (de Google Sheet van het project)
+ *       Foto’s/{projectnummer}_{nr}_{jjjjmmdd-uummss}_{n}.jpg
+ *
+ * De Sheet waaraan dit script gebonden is (Extensies > Apps Script) is het overzicht: tabblad "Projecten"
+ * met alle projecten en links, en tabblad "Codes" met de codelijst. Zie ../docs/01-installatie-apps-script.md.
  *
  * Script-eigenschappen (Projectinstellingen > Script-eigenschappen):
- *   SECRET_KEY  verplicht   de geheime sleutel die ook in de app wordt ingevoerd
- *   FOLDER_ID   optioneel   id van de Drive-map voor de foto's (anders wordt een map aangemaakt)
+ *   SECRET_KEY    verplicht   de geheime sleutel die ook in de app wordt ingevoerd
+ *   FOLDER_ID     optioneel   id van de Drive-hoofdmap voor alle projecten (anders wordt er een aangemaakt)
+ *   SHARE_EMAILS  optioneel   e-mailadressen (gescheiden door komma's) die elk nieuw project mogen bewerken
  */
 
-var VERSION = '1.0.0';
+var VERSION = '1.2.0';
 var TZ = 'Europe/Brussels';
-var SHEET_NAME = 'Punten';
+var PUNTEN_SHEET = 'Punten';
+var PROJECTEN_SHEET = 'Projecten';
 var CODES_SHEET_NAME = 'Codes';
-var FOLDER_NAME = 'InspectSolutions foto’s';
+var ROOT_FOLDER_NAME = 'InspectSolutions';
+var PHOTOS_FOLDER_NAME = 'Foto’s';
 var HEADERS = ['Nr', 'Aangemaakt', 'Item 1', 'Item 2', 'Opmerking', 'Status', 'Prijs', 'Foto’s', 'ID'];
+var PROJECT_HEADERS = ['Projectnummer', 'Naam', 'Aangemaakt', 'Google Sheet', 'Foto’s', 'ID'];
 var COL_PHOTOS = 8;
 var COL_ID = 9;
+var PROJECT_COL_ID = 6;
 
-/** Eénmalig uitvoeren om toestemmingen te geven en de Sheet en map klaar te zetten. */
+/** Eénmalig uitvoeren om toestemmingen te geven en het overzicht en de hoofdmap klaar te zetten. */
 function initialiseer() {
   SpreadsheetApp.getActive().setSpreadsheetTimeZone(TZ);
-  sheet_();
-  folder_();
+  overview_();
+  root_();
   if (!prop_('SECRET_KEY')) {
     throw new Error('Maak eerst de script-eigenschap SECRET_KEY aan (Projectinstellingen).');
   }
-  Logger.log('Klaar. Map: ' + folder_().getUrl());
+  Logger.log('Klaar. Hoofdmap: ' + root_().getUrl());
 }
 
 function doGet() {
@@ -44,12 +55,13 @@ function doPost(e) {
     lock.waitLock(30000);
     locked = true;
     switch (req.action) {
-      case 'ping':   return json_({ ok: true, version: VERSION });
-      case 'upsert': return json_(upsert_(req.record));
-      case 'photo':  return json_(photo_(req));
-      case 'delete': return json_(delete_(req.id));
-      case 'codes':  return json_(codes_(req.codes));
-      default:       return json_({ ok: false, error: 'Onbekende actie: ' + req.action });
+      case 'ping':    return json_({ ok: true, version: VERSION });
+      case 'project': return json_(projectAction_(req.project));
+      case 'upsert':  return json_(upsert_(req));
+      case 'photo':   return json_(photo_(req));
+      case 'delete':  return json_(delete_(req));
+      case 'codes':   return json_(codes_(req.codes));
+      default:        return json_({ ok: false, error: 'Onbekende actie: ' + req.action });
     }
   } catch (err) {
     return json_({ ok: false, error: String((err && err.message) || err) });
@@ -58,12 +70,127 @@ function doPost(e) {
   }
 }
 
-/* ---------- Acties ---------- */
+/* ---------- Projecten ---------- */
 
-function upsert_(rec) {
+/** Maakt het project aan als het nog niet bestaat en past de naam aan als die in de app gewijzigd is. */
+function projectAction_(p) {
+  var ctx = project_(p, true);
+  var name = projectName_(p);
+  if (ctx.info.name !== name) {
+    ctx.folder.setName(name);
+    DriveApp.getFileById(ctx.info.ss).setName(name);
+    ctx.info.name = name;
+    saveInfo_(ctx.id, ctx.info);
+    indexProject_(p, ctx.info);
+  }
+  return { ok: true, id: ctx.id, sheetUrl: ctx.info.sheetUrl, folderUrl: ctx.info.folderUrl, name: name };
+}
+
+/**
+ * Zoekt de Sheet en de fotomap van een project. Bestaan ze niet en is create waar, dan worden ze aangemaakt.
+ * p = { id, number, name, created } zoals de app het stuurt.
+ */
+function project_(p, create) {
+  var id = cleanId_(p && p.id);
+  var raw = prop_('PROJ_' + id);
+  if (raw) {
+    try {
+      var info = JSON.parse(raw);
+      var ss = SpreadsheetApp.openById(info.ss);
+      return {
+        id: id, info: info, ss: ss, sheet: punten_(ss),
+        folder: DriveApp.getFolderById(info.folder), photos: DriveApp.getFolderById(info.photos)
+      };
+    } catch (e) { if (!create) return null; /* map of Sheet is verdwenen: maak opnieuw aan */ }
+  }
+  if (!create) return null;
+
+  var name = projectName_(p);
+  var folder = root_().createFolder(name);
+  var spreadsheet = SpreadsheetApp.create(name);
+  spreadsheet.setSpreadsheetTimeZone(TZ);
+  DriveApp.getFileById(spreadsheet.getId()).moveTo(folder);
+  var photos = folder.createFolder(PHOTOS_FOLDER_NAME);
+  var newInfo = {
+    ss: spreadsheet.getId(), folder: folder.getId(), photos: photos.getId(),
+    sheetUrl: spreadsheet.getUrl(), folderUrl: folder.getUrl(), name: name
+  };
+  saveInfo_(id, newInfo);
+  shareWith_(folder);
+  var sheet = punten_(spreadsheet);
+  indexProject_(p, newInfo);
+  return { id: id, info: newInfo, ss: spreadsheet, sheet: sheet, folder: folder, photos: photos };
+}
+
+function saveInfo_(id, info) {
+  PropertiesService.getScriptProperties().setProperty('PROJ_' + id, JSON.stringify(info));
+}
+
+/** Geeft de e-mailadressen uit SHARE_EMAILS bewerkrechten op de projectmap (en dus op Sheet en foto's). */
+function shareWith_(folder) {
+  String(prop_('SHARE_EMAILS') || '').split(',').forEach(function (mail) {
+    mail = mail.trim();
+    if (!mail) return;
+    try { folder.addEditor(mail); } catch (e) { /* ongeldig adres of niet toegestaan: project blijft werken */ }
+  });
+}
+
+/** Naam van de Sheet en de projectmap: {projectnummer}_{naam in kleine letters aaneen}_{jjjjmmdd}. */
+function projectName_(p) {
+  return cleanNumber_(p.number) + '_' + (slug_(p.name) || 'project') + '_' + stamp_(p.created, 'yyyyMMdd');
+}
+
+function slug_(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+function stamp_(iso, format) {
+  return Utilities.formatDate(iso ? new Date(iso) : new Date(), TZ, format);
+}
+
+function cleanNumber_(n) {
+  n = String(n === undefined || n === null ? '' : n).trim();
+  if (!/^[A-Za-z0-9-]{1,12}$/.test(n)) throw new Error('Ongeldig projectnummer.');
+  return n;
+}
+
+/** Overzicht van alle projecten in de Sheet waaraan het script gebonden is. */
+function indexProject_(p, info) {
+  var sh = overview_();
+  var last = sh.getLastRow();
+  var row = 0;
+  if (last >= 2) {
+    var hit = sh.getRange(2, PROJECT_COL_ID, last - 1, 1).createTextFinder(String(p.id)).matchEntireCell(true).findNext();
+    row = hit ? hit.getRow() : 0;
+  }
+  if (!row) row = Math.max(last, 1) + 1;
+  sh.getRange(row, 1, 1, PROJECT_HEADERS.length).setNumberFormat('@');
+  sh.getRange(row, 1, 1, PROJECT_HEADERS.length).setValues([[
+    String(p.number), String(p.name), stamp_(p.created, 'yyyy-MM-dd'), info.sheetUrl, info.folderUrl, String(p.id)
+  ]]);
+}
+
+function overview_() {
+  var ss = SpreadsheetApp.getActive();
+  var sh = ss.getSheetByName(PROJECTEN_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(PROJECTEN_SHEET, 0);
+    sh.getRange(1, 1, 1, PROJECT_HEADERS.length).setValues([PROJECT_HEADERS]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+    sh.setColumnWidth(2, 220); sh.setColumnWidth(4, 320); sh.setColumnWidth(5, 320);
+  }
+  return sh;
+}
+
+/* ---------- Punten en foto's ---------- */
+
+function upsert_(req) {
+  var rec = req.record;
+  var ctx = project_(req.project, true);
   var id = cleanId_(rec && rec.id);
   var nr = Number(rec.nr);
-  var sh = sheet_();
+  var sh = ctx.sheet;
+  var key = key_(req.project, rec.nr, rec.created);
   var keep = {}, edited = {}, maxN = Number(rec.seq) || 0;
   (rec.photos || []).forEach(function (n) { n = Number(n); keep[n] = true; if (n > maxN) maxN = n; });
   (rec.edited || []).forEach(function (n) { edited[Number(n)] = true; });
@@ -71,24 +198,25 @@ function upsert_(rec) {
   // Is het nummer van het punt gewijzigd, hernoem dan de bestaande foto's (ook de originelen) naar het nieuwe nummer.
   var prevNr = Number(rec.prevNr);
   if (prevNr > 0 && prevNr !== nr) {
+    var prevKey = key_(req.project, prevNr, rec.created);
     for (var k = 1; k <= maxN; k++) {
       [false, true].forEach(function (isOrig) {
-        var old = photoFile_(prevNr, id, k, isOrig);
-        if (old && !photoFile_(nr, id, k, isOrig)) old.setName(photoName_(nr, id, k, isOrig));
+        var old = photoFile_(ctx.photos, prevKey, k, isOrig);
+        if (old && !photoFile_(ctx.photos, key, k, isOrig)) old.setName(photoName_(key, k, isOrig));
       });
     }
   }
 
-  // Bestandsnamen zijn exact bekend ({nr}_{id}_{n}.jpg en {nr}_{id}_{n}_orig.jpg), dus we zoeken op exacte naam.
+  // Bestandsnamen zijn exact bekend, dus we zoeken op exacte naam.
   // - Foto's die op het toestel verwijderd zijn, gaan met hun origineel naar de prullenmand van Drive.
   // - Een foto die niet (meer) bewerkt is, heeft geen origineel-bestand meer nodig.
   // - De Sheet krijgt enkel de link naar de bewerkte (of enige) versie.
   var links = [];
   for (var n = 1; n <= maxN; n++) {
-    if (!keep[n]) { trashPhoto_(nr, id, n, false); trashPhoto_(nr, id, n, true); continue; }
-    var f = photoFile_(nr, id, n, false);
+    if (!keep[n]) { trashPhoto_(ctx.photos, key, n, false); trashPhoto_(ctx.photos, key, n, true); continue; }
+    var f = photoFile_(ctx.photos, key, n, false);
     if (f) links.push(f.getUrl());
-    if (!edited[n]) trashPhoto_(nr, id, n, true);
+    if (!edited[n]) trashPhoto_(ctx.photos, key, n, true);
   }
 
   var price = (rec.price === '' || rec.price === null || rec.price === undefined) ? '' : Number(rec.price);
@@ -114,25 +242,28 @@ function upsert_(rec) {
 }
 
 function photo_(req) {
+  var ctx = project_(req.project, true);
   var id = cleanId_(req.id);
-  var nr = Number(req.nr);
   var n = Number(req.n);
   if (!(n > 0)) throw new Error('Ongeldig fotonummer.');
+  var key = key_(req.project, req.nr, req.created);
   var isOrig = req.orig === true;
   // Bestaat het bestand al (bv. de foto is na synchronisatie bewerkt of een verzoek is herhaald), dan gaat de oude
   // naar de prullenmand en komt de nieuwe onder dezelfde naam. Zo blijft er altijd precies één bestand per naam.
-  trashPhoto_(nr, id, n, isOrig);
-  var blob = Utilities.newBlob(Utilities.base64Decode(req.data), 'image/jpeg', photoName_(nr, id, n, isOrig));
-  folder_().createFile(blob);
-  if (!isOrig) refreshPhotoCell_(id, nr, Math.max(Number(req.seq) || 0, n));
+  trashPhoto_(ctx.photos, key, n, isOrig);
+  var blob = Utilities.newBlob(Utilities.base64Decode(req.data), 'image/jpeg', photoName_(key, n, isOrig));
+  ctx.photos.createFile(blob);
+  if (!isOrig) refreshPhotoCell_(ctx, id, key, Math.max(Number(req.seq) || 0, n));
   return { ok: true, id: id, n: n };
 }
 
-function delete_(rawId) {
-  var id = cleanId_(rawId);
-  var sh = sheet_();
-  var row = findRow_(sh, id);
-  if (row) sh.deleteRow(row);
+function delete_(req) {
+  var id = cleanId_(req.id);
+  var ctx = project_(req.project, false);
+  if (ctx) {
+    var row = findRow_(ctx.sheet, id);
+    if (row) ctx.sheet.deleteRow(row);
+  }
   // De foto's blijven bewust in Drive staan.
   return { ok: true, id: id };
 }
@@ -153,28 +284,32 @@ function codes_(list) {
 /* ---------- Hulpfuncties ---------- */
 
 /** Zet de links van de foto's (bewerkte of enige versie) opnieuw in de cel van het punt. */
-function refreshPhotoCell_(id, nr, maxN) {
-  var sh = sheet_();
-  var row = findRow_(sh, id);
+function refreshPhotoCell_(ctx, id, key, maxN) {
+  var row = findRow_(ctx.sheet, id);
   if (!row) return;
   var links = [];
   for (var n = 1; n <= maxN; n++) {
-    var f = photoFile_(nr, id, n, false);
+    var f = photoFile_(ctx.photos, key, n, false);
     if (f) links.push(f.getUrl());
   }
-  var cell = sh.getRange(row, COL_PHOTOS);
+  var cell = ctx.sheet.getRange(row, COL_PHOTOS);
   cell.setNumberFormat('@');
   cell.setValue(links.join('\n'));
 }
 
-/** {nr}_{id}_{n}.jpg voor de bewerkte (of enige) versie, {nr}_{id}_{n}_orig.jpg voor het origineel. */
-function photoName_(nr, id, n, isOrig) {
-  return nr + '_' + id + '_' + n + (isOrig ? '_orig' : '') + '.jpg';
+/** Onderdelen van de bestandsnaam: projectnummer, volgnummer en aanmaaktijd van het punt (stabiel en uniek). */
+function key_(project, nr, created) {
+  return { num: cleanNumber_(project && project.number), nr: Number(nr), stamp: stamp_(created, 'yyyyMMdd-HHmmss') };
+}
+
+/** {projectnummer}_{nr}_{jjjjmmdd-uummss}_{n}.jpg voor de bewerkte (of enige) versie, met _orig voor het origineel. */
+function photoName_(key, n, isOrig) {
+  return key.num + '_' + key.nr + '_' + key.stamp + '_' + n + (isOrig ? '_orig' : '') + '.jpg';
 }
 
 /** Zoekt een foto op exacte bestandsnaam (zonder die in de prullenmand). */
-function photoFile_(nr, id, n, isOrig) {
-  var it = folder_().getFilesByName(photoName_(nr, id, n, isOrig));
+function photoFile_(folder, key, n, isOrig) {
+  var it = folder.getFilesByName(photoName_(key, n, isOrig));
   while (it.hasNext()) {
     var f = it.next();
     if (!f.isTrashed()) return f;
@@ -183,8 +318,8 @@ function photoFile_(nr, id, n, isOrig) {
 }
 
 /** Gooit alle bestanden met deze naam in de prullenmand. */
-function trashPhoto_(nr, id, n, isOrig) {
-  var it = folder_().getFilesByName(photoName_(nr, id, n, isOrig));
+function trashPhoto_(folder, key, n, isOrig) {
+  var it = folder.getFilesByName(photoName_(key, n, isOrig));
   while (it.hasNext()) {
     var f = it.next();
     if (!f.isTrashed()) f.setTrashed(true);
@@ -198,15 +333,15 @@ function findRow_(sh, id) {
   return hit ? hit.getRow() : 0;
 }
 
-function sheet_() {
-  var ss = SpreadsheetApp.getActive();
-  var sh = ss.getSheetByName(SHEET_NAME);
+/** Het tabblad "Punten" van een projectsheet, met kopregel. */
+function punten_(ss) {
+  var sh = ss.getSheetByName(PUNTEN_SHEET);
   if (!sh) {
     var first = ss.getSheets()[0];
     if (first && first.getLastRow() === 0 && ss.getSheets().length === 1) {
-      sh = first.setName(SHEET_NAME);
+      sh = first.setName(PUNTEN_SHEET);
     } else {
-      sh = ss.insertSheet(SHEET_NAME, 0);
+      sh = ss.insertSheet(PUNTEN_SHEET, 0);
     }
   }
   if (sh.getRange(1, 1).getValue() !== HEADERS[0]) {
@@ -218,20 +353,21 @@ function sheet_() {
   return sh;
 }
 
-function folder_() {
+/** De hoofdmap in Drive waarin alle projectmappen komen. */
+function root_() {
   var props = PropertiesService.getScriptProperties();
   var id = props.getProperty('FOLDER_ID');
   if (id) {
     try { return DriveApp.getFolderById(id); } catch (e) { /* map bestaat niet meer: maak een nieuwe */ }
   }
-  var f = DriveApp.createFolder(FOLDER_NAME);
+  var f = DriveApp.createFolder(ROOT_FOLDER_NAME);
   props.setProperty('FOLDER_ID', f.getId());
   return f;
 }
 
 function cleanId_(id) {
   id = String(id || '');
-  if (!/^[A-Za-z0-9-]{8,64}$/.test(id)) throw new Error('Ongeldig punt-id.');
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(id)) throw new Error('Ongeldig id.');
   return id;
 }
 
