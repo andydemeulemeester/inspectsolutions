@@ -202,6 +202,24 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:14px 4px;min-height:54px;cursor:pointer}
 .opt .code{margin-top:1px}
 .opt.on{background:var(--surface2)}
+/* Projecten */
+.projbar{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;margin-bottom:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:14px;min-height:56px}
+.pnum{font-weight:850;font-size:20px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;min-width:58px}
+.pbody{flex:1;min-width:0;display:flex;flex-direction:column}
+.plabel{font-size:12px;color:var(--muted)}
+.pname{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pswitch{font-size:13px;font-weight:700;color:var(--link)}
+.pcard{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}
+.pcard .pmain{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-height:60px}
+.pcard.active .pmain{border-color:var(--accent);border-width:2px}
+.pcard.archived{opacity:.65}
+.pcard .psub{font-size:13px;color:var(--muted);white-space:normal}
+.pcard .pedit{align-self:center;flex:none}
+.sim.show{display:flex}
+.ptitle{font-size:17px;align-self:center}
+.pfsheet{display:block;padding:8px 10px;word-break:break-all;font-size:14px}
+.mfoot.dock-like{display:flex;gap:10px}
+
 /* Fotoeditor */
 .th img{cursor:pointer}
 .th .pen{position:absolute;left:4px;bottom:4px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.4)}

@@ -5,7 +5,7 @@ Offline-first PWA voor een controlerondgang (±500 punten) op één Samsung S21.
 | Map | Inhoud |
 |---|---|
 | [public/](public/) | De PWA (HTML, CSS, JS, service worker, manifest, iconen) – dit is de map voor Cloudflare Pages |
-| [apps-script/Code.gs](apps-script/Code.gs) | Backend voor Sheet en Drive |
+| [apps-script/Code.gs](apps-script/Code.gs) | Backend: per project een Sheet en fotomap in Drive |
 | [docs/](docs/) | Installatie Apps Script, handleiding klant, hosting en Cloudflare Access |
 | inspectsolutions-prototype.html | Goedgekeurd prototype (referentie) |
 

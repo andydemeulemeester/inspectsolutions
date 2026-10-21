@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.1.0"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.2.0"; /* houd gelijk met VERSION in sw.js */
 
 var $ = function(s){ return document.querySelector(s); };
 var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
@@ -229,7 +229,8 @@ var Store = (function(){
         var existing = all.filter(function(r){ return r.id === id && !r.tomb; })[0];
         var rec = build(existing);
         if(!rec) return null;
-        var others = all.filter(function(r){ return !r.tomb && r.id !== rec.id; });
+        /* het nummer moet uniek zijn binnen het project */
+        var others = all.filter(function(r){ return !r.tomb && r.id !== rec.id && r.project === rec.project; });
         if(others.some(function(r){ return r.nr === rec.nr; })){
           if(!autoNr){ var err = new Error("nummer in gebruik"); err.dup = rec.nr; throw err; }
           rec.nr = others.reduce(function(m, r){ return Math.max(m, r.nr); }, 0) + 1;
@@ -265,6 +266,29 @@ var edIndex = -1, editorDiscard = false;
 var PRICES = [50,100,200,300,400,500,600,700,800,900,1000];
 var DEFAULT_PRICE = 50;
 var channel = null;
+var projects = [], activeProjectId = null;
+
+/* ---------- Projecten ----------
+   { id, number, name, created, archived, rev, syncedRev, sheetUrl, folderUrl }
+   Elk project heeft een eigen Google Sheet en fotomap (het Apps Script maakt ze aan) en een eigen nummering. */
+function projectById(id){ return projects.filter(function(p){ return p.id === id; })[0] || null; }
+function activeProject(){ return projectById(activeProjectId); }
+function activeRecords(){ return records.filter(function(r){ return r.project === activeProjectId; }); }
+function projectRecords(id){ return records.filter(function(r){ return r.project === id; }); }
+function projSnap(p){ return {id: p.id, number: p.number, name: p.name, created: p.created}; }
+function pendingProjects(){ return projects.filter(function(p){ return (p.syncedRev || 0) !== p.rev; }).length; }
+function slugName(s){
+  return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+}
+function ymd(iso){
+  var d = new Date(iso), z = function(n){ return String(n).padStart(2, "0"); };
+  return d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate());
+}
+/* naam van de Sheet: {projectnummer}_{naam in kleine letters aaneen}_{jjjjmmdd}; hetzelfde als in het Apps Script */
+function sheetNameFor(number, name, created){
+  return String(number).trim() + "_" + (slugName(name) || "project") + "_" + ymd(created);
+}
+function saveProjects(){ return Store.setMeta("projects", projects); }
 
 function isOnline(){ return navigator.onLine !== false && !forceOff; }
 function uid(){
@@ -283,7 +307,7 @@ function isSynced(r){
   return (r.syncedRev || 0) === r.rev && (r.photos || []).every(function(p){ return p.up && (!isEdited(p) || p.upOrig); });
 }
 function pendingRecords(){ return records.filter(function(r){ return !isSynced(r); }).length; }
-function pendingAll(){ return pendingRecords() + tombCount + (codesDirty ? 1 : 0); }
+function pendingAll(){ return pendingRecords() + tombCount + pendingProjects() + (codesDirty ? 1 : 0); }
 function notifyOthers(){ try{ if(channel) channel.postMessage("changed"); }catch(e){} }
 
 var toastTimer = null;
@@ -299,6 +323,35 @@ async function load(){
   records = raw.filter(function(r){ return !r.tomb; });
   tombCount = raw.length - records.length;
   codesDirty = !!(await Store.getMeta("codesDirty"));
+  projects = (await Store.getMeta("projects")) || [];
+  activeProjectId = await Store.getMeta("activeProject") || null;
+  var cur = projectById(activeProjectId);
+  if(!cur || cur.archived){
+    var first = projects.filter(function(p){ return !p.archived; })[0];
+    activeProjectId = first ? first.id : null;
+  }
+}
+
+/* Punten uit een oudere versie (zonder project) komen in een project "Algemeen" te staan en worden opnieuw
+   gesynchroniseerd, omdat Sheet en bestandsnamen nu per project zijn. */
+async function migrateProjects(){
+  var legacy = records.filter(function(r){ return !r.project; });
+  if(!legacy.length) return;
+  var oldest = legacy.reduce(function(m, r){ return r.created < m ? r.created : m; }, legacy[0].created);
+  var def = projects.filter(function(p){ return p.number === "0" && p.name === "Algemeen"; })[0];
+  if(!def){
+    def = {id: uid(), number: "0", name: "Algemeen", created: oldest, archived: false, rev: 1, syncedRev: 0};
+    projects.push(def);
+    await saveProjects();
+  }
+  if(!activeProjectId) await Store.setMeta("activeProject", def.id);
+  for(var i = 0; i < legacy.length; i++){
+    await Store.update(legacy[i].id, function(x){
+      x.project = def.id; x.rev = (x.rev || 0) + 1; x.syncedNr = 0;
+      (x.photos || []).forEach(function(p){ p.up = false; p.upOrig = false; });
+    });
+  }
+  await load();
 }
 
 /* ---------- Weergave: lijst ---------- */
@@ -308,10 +361,16 @@ function renderNet(){
   $("#netTxt").textContent = on ? "Online" : "Offline";
 }
 function renderStats(){
-  var ok = records.filter(function(r){ return r.status === "OK"; }).length;
-  $("#stTotal").textContent = records.length;
+  var mine = activeRecords();
+  var ok = mine.filter(function(r){ return r.status === "OK"; }).length;
+  $("#stTotal").textContent = mine.length;
   $("#stOk").textContent = ok;
-  $("#stNok").textContent = records.length - ok;
+  $("#stNok").textContent = mine.length - ok;
+}
+function renderProjectBar(){
+  var p = activeProject();
+  $("#projNum").textContent = p ? p.number : "–";
+  $("#projName").textContent = p ? p.name : "Geen project. Tik om er een te maken.";
 }
 function renderSync(progress, total){
   var pending = pendingRecords();
@@ -335,16 +394,19 @@ function renderSync(progress, total){
   }
 }
 function renderList(){
-  var rows = records.filter(function(r){
+  var mine = activeRecords();
+  var rows = mine.filter(function(r){
     if(filter === "ok") return r.status === "OK";
     if(filter === "nok") return r.status !== "OK";
     return true;
   }).sort(function(a, b){ return b.nr - a.nr; });
 
   if(!rows.length){
-    $("#list").innerHTML = '<div class="empty">' + (records.length
-      ? "Geen punten met deze status."
-      : "Nog geen punten. Tik op ‘Nieuw punt’ om de rondgang te starten.") + "</div>";
+    $("#list").innerHTML = '<div class="empty">' + (!activeProject()
+      ? "Maak eerst een project aan. Tik bovenaan op ‘Project’."
+      : mine.length
+        ? "Geen punten met deze status."
+        : "Nog geen punten. Tik op ‘Nieuw punt’ om de rondgang te starten.") + "</div>";
     return;
   }
   $("#list").innerHTML = rows.map(function(r){
@@ -364,22 +426,25 @@ function renderList(){
       "</button>";
   }).join("");
 }
-function renderAll(){ renderNet(); renderStats(); renderSync(); renderList(); }
+function renderAll(){ renderNet(); renderProjectBar(); renderStats(); renderSync(); renderList(); }
 
 /* ---------- Schermen en terugknop (History API) ---------- */
 function show(v){
   if(view === "List") listScroll = window.scrollY;
   view = v;
-  ["List","Form","Codes"].forEach(function(n){
+  ["List","Form","Codes","Projects"].forEach(function(n){
     $("#view" + n).hidden = (n !== v);
     $("#dock" + n).hidden = (n !== v);
   });
   window.scrollTo(0, v === "List" ? listScroll : 0);
 }
 function applyLayers(){
-  var base = stack.indexOf("codes") >= 0 ? "Codes" : (stack.indexOf("form") >= 0 ? "Form" : "List");
+  var base = stack.indexOf("codes") >= 0 ? "Codes"
+    : stack.indexOf("projects") >= 0 ? "Projects"
+    : (stack.indexOf("form") >= 0 ? "Form" : "List");
   if(base !== view) show(base);
   $("#picker").hidden = stack.indexOf("picker") < 0;
+  $("#projForm").hidden = stack.indexOf("projectForm") < 0;
   $("#editor").hidden = stack.indexOf("editor") < 0;
 }
 function pushLayer(name){
@@ -434,21 +499,22 @@ window.addEventListener("popstate", function(e){
 /* ---------- Formulier ---------- */
 function blankDraft(){
   return {
-    id: uid(), isNew: true, nr: null, nrTouched: false, created: new Date().toISOString(),
+    id: uid(), isNew: true, nr: null, nrTouched: false, project: activeProjectId, created: new Date().toISOString(),
     items: [null, null], photos: [], photoSeq: 0, note: "", status: "NIET OK", price: DEFAULT_PRICE
   };
 }
 
 /* ---------- Volgnummer ---------- */
 /* het volgende nummer is altijd het hoogste bestaande nummer + 1 (zonder het punt dat je zelf bewerkt) */
-function highestNr(excludeId){
-  return records.reduce(function(m, r){ return r.id === excludeId ? m : Math.max(m, r.nr); }, 0);
+/* de nummering is per project */
+function highestNr(excludeId, projectId){
+  return projectRecords(projectId).reduce(function(m, r){ return r.id === excludeId ? m : Math.max(m, r.nr); }, 0);
 }
 function readNr(){
   var v = $("#fNr").value.trim();
   if(!/^\d+$/.test(v) || Number(v) < 1) return {ok: false, msg: "Vul een geheel nummer in (1 of hoger)."};
   var n = Number(v);
-  if(records.some(function(r){ return r.nr === n && r.id !== draft.id; })) return {ok: false, msg: "Nummer " + n + " is al in gebruik."};
+  if(projectRecords(draft.project).some(function(r){ return r.nr === n && r.id !== draft.id; })) return {ok: false, msg: "Nummer " + n + " is al in gebruik."};
   return {ok: true, nr: n};
 }
 function renderNr(){
@@ -458,7 +524,7 @@ function renderNr(){
   hint.classList.toggle("bad", !res.ok);
   if(res.ok){
     draft.nr = res.nr;
-    hint.textContent = "Het volgende punt krijgt nummer " + (Math.max(highestNr(draft.id), res.nr) + 1) + ".";
+    hint.textContent = "Het volgende punt krijgt nummer " + (Math.max(highestNr(draft.id, draft.project), res.nr) + 1) + ".";
   }else{
     hint.textContent = res.msg;
   }
@@ -468,7 +534,7 @@ async function openForm(rec){
   if(stack.indexOf("form") >= 0) return;
   if(rec){
     draft = {
-      id: rec.id, isNew: false, nr: rec.nr, created: rec.created,
+      id: rec.id, isNew: false, nr: rec.nr, project: rec.project, created: rec.created,
       items: [rec.items[0] || null, rec.items[1] || null],
       photos: (rec.photos || []).map(function(p){
         return {pid: p.pid, up: p.up, upOrig: p.upOrig, blob: p.blob, orig: p.orig, ops: p.ops, ver: p.ver, dirty: false, url: URL.createObjectURL(p.blob)};
@@ -478,9 +544,11 @@ async function openForm(rec){
     };
   }else{
     draft = blankDraft();
-    draft.nr = highestNr() + 1;
+    draft.nr = highestNr(null, draft.project) + 1;
   }
   showItem2 = !!draft.items[1];
+  var pj = projectById(draft.project);
+  $("#fProject").textContent = pj ? "Project " + pj.number + " · " + pj.name : "";
   $("#fNr").value = draft.nr;
   renderNr();
   $("#fTime").textContent = "Aangemaakt " + fmtFull(draft.created);
@@ -647,7 +715,7 @@ async function saveDraft(){
     var saved = await Store.commit(d.id, function(x){
       if(wasNew){
         return {
-          id: d.id, nr: nrRes.nr, created: d.created, items: items, photos: buildPhotos(null), photoSeq: d.photoSeq,
+          id: d.id, nr: nrRes.nr, project: d.project, created: d.created, items: items, photos: buildPhotos(null), photoSeq: d.photoSeq,
           note: d.note, status: d.status, price: d.price, rev: 1, syncedRev: 0, updated: now
         };
       }
@@ -737,9 +805,12 @@ function itemText(it){ return it ? it.code + " | " + it.label : ""; }
 
 /* één stap voor één punt: eerst de tekst, daarna de foto's één voor één */
 async function syncStep(r){
+  var pj = projectById(r.project);
+  if(!pj) throw new SyncError("server", "Het project van punt " + r.nr + " bestaat niet meer.");
+  var project = projSnap(pj);
   if((r.syncedRev || 0) !== r.rev){
     var rev = r.rev, nrSent = r.nr;
-    await post({action: "upsert", record: {
+    await post({action: "upsert", project: project, record: {
       id: r.id, nr: r.nr, prevNr: r.syncedNr || 0, created: r.created,
       item1: itemText(r.items[0]), item2: itemText(r.items[1]),
       note: r.note || "", status: r.status, price: r.price == null ? "" : r.price,
@@ -758,7 +829,7 @@ async function syncStep(r){
   if(p){
     var ver = p.ver || 0, blob = sendOrig ? p.orig : p.blob;
     var data = await blobToBase64(blob);
-    await post({action: "photo", id: r.id, nr: r.nr, n: p.pid, orig: sendOrig, seq: r.photoSeq || 0, data: data});
+    await post({action: "photo", project: project, id: r.id, nr: r.nr, created: r.created, n: p.pid, orig: sendOrig, seq: r.photoSeq || 0, data: data});
     await Store.update(r.id, function(x){
       (x.photos || []).forEach(function(q){
         if(q.pid === p.pid && (q.ver || 0) === ver){ if(sendOrig) q.upOrig = true; else q.up = true; }
@@ -791,9 +862,25 @@ async function syncPass(){
         codesDirty = false;
       });
     }
+    /* eerst de projecten: het script maakt daar de Sheet en de fotomap voor aan (of past de naam aan) */
+    var pend = projects.filter(function(p){ return (p.syncedRev || 0) !== p.rev; });
+    for(var q = 0; q < pend.length; q++){
+      await unit(async function(){
+        var sent = pend[q].rev, pid = pend[q].id;
+        var res = await post({action: "project", project: projSnap(pend[q])});
+        var list = (await Store.getMeta("projects")) || [];
+        list.forEach(function(x){
+          if(x.id !== pid) return;
+          if((x.syncedRev || 0) < sent) x.syncedRev = sent;
+          x.sheetUrl = res.sheetUrl || x.sheetUrl; x.folderUrl = res.folderUrl || x.folderUrl;
+        });
+        await Store.setMeta("projects", list);
+        projects = list;
+      });
+    }
     for(var i = 0; i < tombs.length; i++){
       await unit(async function(){
-        await post({action: "delete", id: tombs[i].id});
+        if(tombs[i].project) await post({action: "delete", project: tombs[i].project, id: tombs[i].id});
         await Store.del(tombs[i].id);
       });
     }
@@ -857,6 +944,121 @@ async function trySync(manual){
     if(out.done) toast("Niet alles is verstuurd. De rest blijft op de gsm.");
     scheduleRetry();
   }
+}
+
+/* ---------- Projecten beheren ---------- */
+var pfEditId = null;
+
+function openProjects(){
+  if(stack.indexOf("projects") >= 0) return;
+  renderProjects();
+  pushLayer("projects");
+}
+function renderProjects(){
+  var showArchived = $("#projArchived").checked;
+  var list = projects.filter(function(p){ return showArchived || !p.archived; })
+    .sort(function(a, b){ return b.created < a.created ? -1 : 1; });
+  $("#projList").innerHTML = list.length ? list.map(function(p){
+    var n = projectRecords(p.id).length, active = p.id === activeProjectId;
+    var sub = n + (n === 1 ? " punt" : " punten") + (active ? " · Actief" : "") + (p.archived ? " · Gearchiveerd" : "") + (p.sheetUrl ? "" : " · Nog niet gesynchroniseerd");
+    return '<div class="pcard' + (active ? " active" : "") + (p.archived ? " archived" : "") + '">' +
+      '<button type="button" class="pmain" data-pick="' + esc(p.id) + '"' + (p.archived ? " disabled" : "") + '>' +
+      '<span class="pnum">' + esc(p.number) + '</span><span class="pbody"><span class="pname">' + esc(p.name) + '</span><span class="psub">' + esc(sub) + "</span></span></button>" +
+      '<button type="button" class="btn small pedit" data-edit="' + esc(p.id) + '" aria-label="Project ' + esc(p.number) + ' bewerken">Bewerken</button></div>';
+  }).join("") : '<div class="empty">Nog geen projecten. Tik op ‘Nieuw project’.</div>';
+}
+async function chooseProject(id){
+  activeProjectId = id;
+  await Store.setMeta("activeProject", id);
+  filter = "all";
+  Array.prototype.forEach.call(document.querySelectorAll("#filter button"), function(x){ x.classList.toggle("on", x.getAttribute("data-f") === "all"); });
+  renderAll();
+  back();
+}
+function openProjectForm(id){
+  if(stack.indexOf("projectForm") >= 0) return;
+  pfEditId = id;
+  var p = id ? projectById(id) : null;
+  var locked = !!p && (p.syncedRev || 0) > 0;
+  $("#pfTitle").textContent = p ? "Project bewerken" : "Nieuw project";
+  $("#pfNumber").value = p ? p.number : "";
+  $("#pfName").value = p ? p.name : "";
+  $("#pfNumber").disabled = locked;
+  $("#pfNumberHint").textContent = locked
+    ? "Het projectnummer kan na de eerste synchronisatie niet meer gewijzigd worden."
+    : "Letters, cijfers of streepjes, maximaal 12 tekens.";
+  $("#pfArchive").hidden = !p;
+  $("#pfArchive").textContent = p && p.archived ? "Project herstellen" : "Project archiveren";
+  $("#pfLinks").hidden = !(p && p.sheetUrl);
+  if(p && p.sheetUrl){ $("#pfSheetLink").href = p.sheetUrl; $("#pfFolderLink").href = p.folderUrl || p.sheetUrl; }
+  $("#pfErr").textContent = "";
+  updateProjectPreview();
+  pushLayer("projectForm");
+  if(!p) setTimeout(function(){ $("#pfNumber").focus(); }, 60);
+}
+function updateProjectPreview(){
+  var num = $("#pfNumber").value.trim(), name = $("#pfName").value.trim();
+  var p = pfEditId ? projectById(pfEditId) : null;
+  $("#pfSheet").textContent = (num || name) ? sheetNameFor(num || "…", name, p ? p.created : new Date().toISOString()) : "";
+}
+async function saveProject(){
+  var num = $("#pfNumber").value.trim(), name = $("#pfName").value.trim();
+  var p = pfEditId ? projectById(pfEditId) : null, err = "";
+  if(!/^[A-Za-z0-9-]{1,12}$/.test(num)) err = "Projectnummer: 1 tot 12 letters, cijfers of streepjes.";
+  else if(!name || !slugName(name)) err = "Vul een projectnaam in.";
+  else if(name.length > 60) err = "De projectnaam is te lang (maximaal 60 tekens).";
+  else if(projects.some(function(x){ return x.number.toLowerCase() === num.toLowerCase() && (!p || x.id !== p.id); })) err = "Projectnummer " + num + " is al in gebruik.";
+  if(err){ $("#pfErr").textContent = err; return; }
+  if(p){
+    if(p.number !== num || p.name !== name){ p.number = num; p.name = name; p.rev = (p.rev || 0) + 1; }
+    await saveProjects();
+    renderProjects(); renderAll();
+    toast("Project bijgewerkt.");
+    back();
+  }else{
+    p = {id: uid(), number: num, name: name, created: new Date().toISOString(), archived: false, rev: 1, syncedRev: 0};
+    projects.push(p);
+    await saveProjects();
+    activeProjectId = p.id;
+    await Store.setMeta("activeProject", p.id);
+    renderAll();
+    toast("Project " + num + " aangemaakt.");
+    history.go(-2);                 /* sluit het formulier en het projectenscherm */
+  }
+  notifyOthers();
+  trySync(false);
+}
+async function toggleArchive(){
+  var p = pfEditId ? projectById(pfEditId) : null;
+  if(!p) return;
+  p.archived = !p.archived;
+  await saveProjects();
+  if(p.archived && p.id === activeProjectId){
+    var next = projects.filter(function(x){ return !x.archived; })[0];
+    activeProjectId = next ? next.id : null;
+    await Store.setMeta("activeProject", activeProjectId);
+  }
+  renderProjects(); renderAll();
+  toast(p.archived ? "Project gearchiveerd." : "Project hersteld.");
+  back();
+}
+function bindProjects(){
+  $("#projBar").addEventListener("click", openProjects);
+  $("#btnProjBack").addEventListener("click", back);
+  $("#btnProjNew").addEventListener("click", function(){ openProjectForm(null); });
+  $("#projArchived").addEventListener("change", renderProjects);
+  $("#projList").addEventListener("click", function(e){
+    var pick = e.target.closest("[data-pick]");
+    if(pick){ chooseProject(pick.getAttribute("data-pick")); return; }
+    var ed = e.target.closest("[data-edit]");
+    if(ed) openProjectForm(ed.getAttribute("data-edit"));
+  });
+  $("#pfClose").addEventListener("click", back);
+  $("#pfCancel").addEventListener("click", back);
+  $("#pfSave").addEventListener("click", saveProject);
+  $("#pfArchive").addEventListener("click", toggleArchive);
+  $("#pfNumber").addEventListener("input", updateProjectPreview);
+  $("#pfName").addEventListener("input", updateProjectPreview);
 }
 
 /* ---------- Beheer ---------- */
@@ -975,7 +1177,11 @@ function initServiceWorker(){
 
 /* ---------- Events ---------- */
 function bind(){
-  $("#btnNew").addEventListener("click", function(){ openForm(null); });
+  $("#btnNew").addEventListener("click", function(){
+    if(!activeProject()){ toast("Maak eerst een project aan."); openProjects(); openProjectForm(null); return; }
+    openForm(null);
+  });
+  bindProjects();
   $("#btnCodes").addEventListener("click", openCodes);
   $("#btnSync").addEventListener("click", function(){ trySync(true); });
   $("#btnCancel").addEventListener("click", back);
@@ -1077,7 +1283,8 @@ function bind(){
     armButton($("#btnDelete"), "Tik nogmaals om te verwijderen", async function(){
       var id = draft.id;
       /* grafsteen: zo wordt de rij ook uit de Sheet verwijderd bij de volgende synchronisatie */
-      await Store.put({id: id, tomb: true, at: new Date().toISOString()});
+      var pj = projectById(draft.project);
+      await Store.put({id: id, tomb: true, at: new Date().toISOString(), project: pj ? projSnap(pj) : null});
       await load();
       leaveForm(); renderAll(); notifyOthers(); toast("Punt verwijderd.");
       trySync(false);
@@ -1133,6 +1340,7 @@ async function init(){
   codes = (Array.isArray(saved) && saved.length) ? saved : parseCodes(DEFAULT_TEXT);
   cfg = (await Store.getMeta("config")) || null;
   await load();
+  await migrateProjects();
   renderAll();
   requestPersist();
   initServiceWorker();

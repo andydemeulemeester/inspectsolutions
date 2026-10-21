@@ -16,6 +16,13 @@ Bij de eerste start opent het scherm **Beheer** vanzelf.
 - Open de app **één keer met internet**, zodat de laatste versie geladen is.
 - Staat er “Nieuwe versie beschikbaar”? Tik **Nu bijwerken**. Uw punten blijven bewaard.
 
+## Projecten
+Bovenaan het beginscherm staat het **project** waaraan je werkt (projectnummer en naam). Elk project heeft een eigen nummering, een eigen Google Sheet en een eigen fotomap.
+- **Nieuw project:** tik op de projectbalk > **Nieuw project**. Vul het **projectnummer** (bv. 26310) en de **projectnaam** in. De app toont de naam van de Sheet die het wordt: projectnummer, naam in kleine letters aaneen en de aanmaakdatum (bv. `26310_residentiezonneveld_20261021`). Bij de eerste synchronisatie maakt het script de Sheet en de fotomap aan en deelt ze met de ingestelde e-mailadressen.
+- **Wisselen:** tik op de projectbalk en daarna op het project. Je ziet dan alleen de punten van dat project.
+- **Bewerken:** tik bij het project op **Bewerken** om de naam te wijzigen (de Sheet en de map worden hernoemd). Het projectnummer kan na de eerste synchronisatie niet meer gewijzigd worden.
+- **Archiveren:** een afgewerkt project kun je archiveren. Het verdwijnt uit de lijst (vink **Toon gearchiveerde projecten** aan om het terug te zien) en kan hersteld worden. De Sheet en de foto’s blijven in Drive.
+
 ## Tijdens de rondgang
 1. **Nieuw punt**. Het tijdstip is automatisch. Het **nummer** is het hoogste bestaande nummer + 1, maar je mag het aanpassen (bv. van 6 naar 10; het volgende punt krijgt dan 11). Het moet een geheel getal van 1 of hoger zijn dat nog niet gebruikt is, anders wordt het veld rood en kun je niet opslaan.
 2. Tik op **Item 1** en zoek op code of tekst. Een tweede item kan via **Tweede item toevoegen**.
@@ -37,7 +44,7 @@ Tik in het formulier op een foto. Het scherm **Foto bewerken** opent. De foto op
 - **Ongedaan**, **Opnieuw** en **Alles wissen** werken stap voor stap.
 - **Klaar** bewaart de tekening, **Annuleren** gooit ze weg (met een vraag als er wijzigingen zijn). De terugknop van Android doet hetzelfde als Annuleren.
 - De oorspronkelijke foto blijft altijd bewaard. Een bewerkte foto kun je later opnieuw openen en aanpassen of weer wissen.
-- Na synchronisatie staat in de Sheet de link naar de **bewerkte** foto. In Drive staat de bewerkte foto als `{nr}_{id}_{n}.jpg` en het origineel als `{nr}_{id}_{n}_orig.jpg`.
+- Na synchronisatie staat in de Sheet de link naar de **bewerkte** foto. In de map **Foto’s** van het project staat de bewerkte foto als `{projectnummer}_{nr}_{datum-tijd}_{n}.jpg` en het origineel als `…_{n}_orig.jpg`.
 
 ## Synchroniseren
 - Gebeurt vanzelf zodra de app open is en er verbinding is. Bij een fout probeert de app het later opnieuw.
@@ -46,7 +53,7 @@ Tik in het formulier op een foto. Het scherm **Foto bewerken** opent. De foto op
 
 ## Beheer
 - **Codelijst**: één item per regel als `CODE | omschrijving`. Bestaande punten behouden hun oorspronkelijke code en tekst.
-- **Alle punten wissen**: enkel gebruiken als alles verstuurd is. Vraagt twee keer bevestiging.
+- **Alle punten wissen**: wist de punten van **alle** projecten op dit toestel. Enkel gebruiken als alles verstuurd is. Vraagt twee keer bevestiging. De projecten blijven bestaan.
 - **Nummering**: het volgende nummer is altijd het hoogste bestaande nummer + 1. Na “Alle punten wissen” begint de nummering dus weer bij 1.
 
 ## Problemen

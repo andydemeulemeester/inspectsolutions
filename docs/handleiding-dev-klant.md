@@ -21,10 +21,21 @@ Bij de eerste start opent het scherm **Beheer** vanzelf.
 
 Tip: kopieer het webadres en de sleutel uit je bericht en plak ze in de velden. Zo vermijd je typfouten.
 
-## 3. Een punt invoeren
+## 3. Een project aanmaken
+Elk project heeft een eigen nummering, een eigen Google Sheet en een eigen fotomap. Zonder project kun je geen punt invoeren.
+1. Tik bovenaan op de **projectbalk** en daarna op **Nieuw project**.
+2. Vul het **projectnummer** (bv. `26310`) en de **projectnaam** in (bv. `Residentie Zonneveld`).
+3. De app toont de **naam van de Google Sheet**: projectnummer, projectnaam in kleine letters aaneen en de aanmaakdatum, bv. `26310_residentiezonneveld_20261021`.
+4. Tik **Opslaan**. Het project is meteen actief. Bij de eerste synchronisatie maakt het script de Sheet en de fotomap aan.
+
+**Wisselen van project:** tik op de projectbalk en kies een project. Je ziet alleen de punten van dat project, en de nummering begint per project bij 1.
+**Bewerken:** tik bij het project op **Bewerken**. Je kunt de naam wijzigen (de Sheet en de map worden hernoemd). Het projectnummer ligt vast na de eerste synchronisatie.
+**Archiveren:** een afgewerkt project kun je archiveren en later herstellen.
+
+## 4. Een punt invoeren
 1. Tik **Nieuw punt**. Het tijdstip is automatisch. Het **nummer** is het hoogste bestaande nummer + 1, maar je mag het zelf aanpassen (bv. van 6 naar 10). Het volgende punt krijgt dan 11. Een nummer moet een geheel getal van 1 of hoger zijn en mag nog niet in gebruik zijn. Anders wordt het veld rood en kun je niet opslaan. Onder het veld staat welk nummer daarna volgt.
 2. Tik op **Item 1** en zoek op code of tekst. Een tweede item kan via **Tweede item toevoegen**.
-3. **Foto nemen** of **Uit galerij** (meerdere tegelijk kan). Tik op een foto om ze groot te zien, op **×** om ze te verwijderen.
+3. **Foto nemen** of **Uit galerij** (meerdere tegelijk kan). Tik op **×** om een foto te verwijderen.
    **Foto bewerken:** tik op een foto om erop te tekenen. Kies **Pen**, **Pijl**, **Ovaal** of **Tekst**, een kleur (rood, geel, wit, zwart) en een dikte (dun, middel, dik). Met **Ongedaan**, **Opnieuw** en **Alles wissen** kun je stappen terugdraaien. **Klaar** bewaart de tekening, **Annuleren** gooit ze weg. De originele foto blijft altijd bewaard en een bewerkte foto herken je aan het potloodicoon.
 4. Typ een **opmerking** indien nodig.
 5. **Status**: standaard NIET OK. Tik OK als het in orde is.
@@ -33,14 +44,23 @@ Tip: kopieer het webadres en de sleutel uit je bericht en plak ze in de velden. 
 
 Een punt aanpassen of verwijderen: tik het in de lijst. De terugknop van Android sluit het formulier of de kiezer.
 
-## 4. Synchroniseren
+## 5. Synchroniseren
 - Gebeurt vanzelf zodra de app open is en er internet is.
 - Een punt blijft **Te versturen** tot de Google Sheet het bevestigd heeft, daarna **Verstuurd**.
 - Tik **Nu synchroniseren** om het meteen te forceren.
 - **Laat de app open** tot er “Alles gesynchroniseerd” staat. Op Android synchroniseert een app niet op de achtergrond.
 
-## 5. Wat we graag testen
+## 6. Wat we graag testen
 Vink af wat je gedaan hebt en noteer wat niet werkte.
+
+**Projecten**
+- [ ] Een project aanmaken met projectnummer en naam. Klopt de getoonde naam van de Sheet met wat je verwacht (nummer, naam in kleine letters aaneen, datum)?
+- [ ] Een tweede project aanmaken en wisselen: je ziet alleen de punten van het gekozen project en de nummering begint er opnieuw bij 1
+- [ ] Na de synchronisatie: in Drive staat de map **InspectSolutions** met per project een map met dezelfde naam als de Sheet, de Sheet zelf en een submap **Foto’s**
+- [ ] Het projectnummer, de projectnaam en de datum in de naam van de Sheet kloppen. Elk project heeft zijn eigen Sheet.
+- [ ] De naam van een project wijzigen: de Sheet en de map krijgen de nieuwe naam
+- [ ] Een project archiveren en weer herstellen
+- [ ] Een foto in Drive heet `{projectnummer}_{nr}_{datum-tijd}_{n}.jpg`, bv. `26310_5_20261021-143005_1.jpg`
 
 **Basis**
 - [ ] App installeren en openen via het rode icoon
@@ -78,7 +98,7 @@ Vink af wat je gedaan hebt en noteer wat niet werkte.
 - [ ] De tekst is overal duidelijk en leesbaar, ook in de zon
 - [ ] Het uploaden van veel foto’s (bv. 20) lukt zonder dat de gsm traag wordt
 
-## 6. Problemen
+## 7. Problemen
 | Probleem | Oplossing |
 |---|---|
 | “Sleutel geweigerd” | Voer de sleutel in Beheer opnieuw in (kopiëren en plakken). |
@@ -87,7 +107,7 @@ Vink af wat je gedaan hebt en noteer wat niet werkte.
 | De app vraagt een e-mailcode zonder internet | Open de app voortaan eerst met internet (zie hierboven, “Zonder internet”). |
 | Er verschijnt “Nieuwe versie beschikbaar” | Tik **Nu bijwerken**. Je punten blijven bewaard. |
 
-## 7. Feedback doorgeven
+## 8. Feedback doorgeven
 Noteer bij een probleem:
 - wat je deed (stap voor stap),
 - wat je verwachtte en wat er gebeurde,

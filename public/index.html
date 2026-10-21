@@ -34,6 +34,12 @@
       <button type="button" class="btn small primary" id="btnUpdate">Nu bijwerken</button>
     </div>
 
+    <button type="button" class="projbar" id="projBar" aria-label="Project kiezen of beheren">
+      <span class="pnum" id="projNum">–</span>
+      <span class="pbody"><span class="plabel">Project</span><span class="pname" id="projName">Geen project</span></span>
+      <span class="pswitch" aria-hidden="true">Wisselen</span>
+    </button>
+
     <div class="stats">
       <div class="stat"><b id="stTotal">0</b><span>Punten</span></div>
       <div class="stat bad"><b id="stNok">0</b><span>NIET OK</span></div>
@@ -58,6 +64,7 @@
 
   <!-- FORMULIER -->
   <section id="viewForm" hidden>
+    <div class="muted small" id="fProject"></div>
     <div class="formhead">
       <div><label class="muted small" for="fNr">Punt (nummer)</label><input class="nrinput" id="fNr" type="number" inputmode="numeric" min="1" step="1" autocomplete="off"></div>
       <div class="muted small right" id="fTime"></div>
@@ -111,6 +118,14 @@
     <button type="button" class="btn danger wide" id="btnDelete" hidden>Punt verwijderen</button>
   </section>
 
+  <!-- PROJECTEN -->
+  <section id="viewProjects" hidden>
+    <h2>Projecten</h2>
+    <p class="muted">Kies het project waaraan je werkt. Elk project heeft een eigen Google Sheet, een eigen fotomap en een eigen nummering.</p>
+    <div id="projList"></div>
+    <label class="sim show"><input type="checkbox" id="projArchived"> Toon gearchiveerde projecten</label>
+  </section>
+
   <!-- BEHEER -->
   <section id="viewCodes" hidden>
     <div class="notice" id="firstRun" hidden><strong>Eerste start.</strong> Vul hieronder de verbinding met de Google Sheet in. Doe dit met internet aan. Daarna werkt de app ook zonder verbinding.</div>
@@ -139,7 +154,7 @@
     <button type="button" class="btn wide" id="btnReset">Standaardlijst herstellen</button>
 
     <h2>Gegevens</h2>
-    <p class="muted">Wist alle punten van dit toestel en laat de nummering opnieuw bij 1 beginnen.</p>
+    <p class="muted">Wist alle punten van alle projecten op dit toestel en laat de nummering opnieuw bij 1 beginnen. De projecten blijven bestaan.</p>
     <button type="button" class="btn danger wide" id="btnWipe">Alle punten wissen</button>
 
     <h2>Over</h2>
@@ -156,6 +171,10 @@
   <button type="button" class="btn" id="btnCancel">Annuleren</button>
   <button type="button" class="btn primary" id="btnSave">Punt opslaan</button>
 </div>
+<div class="dock" id="dockProjects" hidden>
+  <button type="button" class="btn" id="btnProjBack">Terug</button>
+  <button type="button" class="btn primary" id="btnProjNew">Nieuw project</button>
+</div>
 <div class="dock" id="dockCodes" hidden>
   <button type="button" class="btn" id="btnCodesBack">Terug</button>
   <button type="button" class="btn primary" id="btnCodesSave">Codelijst opslaan</button>
@@ -169,6 +188,41 @@
   </div>
   <div class="mlist" id="pickList"></div>
   <div class="mfoot"><button type="button" class="btn wide" id="pickClear">Selectie wissen</button></div>
+</div>
+
+<!-- Project aanmaken of bewerken -->
+<div class="modal" id="projForm" hidden role="dialog" aria-modal="true" aria-label="Project">
+  <div class="mhead">
+    <button type="button" class="btn icon" id="pfClose" aria-label="Sluiten">←</button>
+    <strong class="ptitle" id="pfTitle">Nieuw project</strong>
+  </div>
+  <div class="mlist">
+    <div class="field">
+      <label for="pfNumber">Projectnummer</label>
+      <input id="pfNumber" type="text" inputmode="text" maxlength="12" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="bv. 26310">
+      <div class="muted small formnote" id="pfNumberHint"></div>
+    </div>
+    <div class="field">
+      <label for="pfName">Projectnaam</label>
+      <input id="pfName" type="text" maxlength="60" autocomplete="off" placeholder="bv. Residentie Zonneveld">
+    </div>
+    <div class="field">
+      <span class="lab">Naam van de Google Sheet</span>
+      <code id="pfSheet" class="pfsheet"></code>
+      <div class="muted small formnote">Projectnummer, projectnaam in kleine letters aaneen en de aanmaakdatum (jaar, maand, dag). Het script maakt de Sheet en de fotomap zelf aan bij de eerste synchronisatie.</div>
+    </div>
+    <div class="field" id="pfLinks" hidden>
+      <span class="lab">In Google</span>
+      <a id="pfSheetLink" href="#" target="_blank" rel="noopener">Google Sheet openen</a> ·
+      <a id="pfFolderLink" href="#" target="_blank" rel="noopener">Projectmap openen</a>
+    </div>
+    <div class="cfgstate bad" id="pfErr" role="alert"></div>
+    <button type="button" class="btn wide" id="pfArchive" hidden>Project archiveren</button>
+  </div>
+  <div class="mfoot dock-like">
+    <button type="button" class="btn" id="pfCancel">Annuleren</button>
+    <button type="button" class="btn primary" id="pfSave">Opslaan</button>
+  </div>
 </div>
 
 <!-- Foto bewerken -->
