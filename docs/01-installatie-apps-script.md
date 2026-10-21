@@ -18,6 +18,18 @@ InspectSolutions/
 - In de Sheet staan de kolommen `Nr | Aangemaakt | Item 1 | Item 2 | Opmerking | Status | Prijs | Foto’s | ID`. De kolom Foto’s bevat de link naar de foto (de bewerkte versie als die er is).
 - De bestandsnaam van een foto bevat het projectnummer, het volgnummer van het punt en het aanmaakmoment van het punt (jaar, maand, dag, uur, minuut, seconde), zodat hij altijd uniek is.
 
+## DEV en productie
+| | DEV (test) | Productie |
+|---|---|---|
+| Eigenaar van script, Sheets en foto’s | de ontwikkelaar | het Google-account van de klant |
+| `SHARE_EMAILS` | niet nodig | optioneel: het Gmail-adres van de ontwikkelaar, zodat die elke nieuwe projectmap kan beheren |
+| Toegang van de ontwikkelaar | is eigenaar | zie hieronder |
+
+**Toegang van de ontwikkelaar in productie** (de eigenaar doet dit één keer):
+1. Deel de **overzichts-Sheet** (waaraan het script gebonden is) met het Gmail-adres van de ontwikkelaar als **bewerker**. Daarmee kan die via **Extensies > Apps Script** het script openen en aanpassen en de script-eigenschappen wijzigen.
+2. Deel de hoofdmap **InspectSolutions** in Drive met dat adres als **bewerker**. Nieuwe projectmappen erven die rechten. Controleer dat bij het eerste project, of zet het adres in `SHARE_EMAILS`.
+3. **Implementeren doet bij voorkeur de eigenaar zelf**, ingelogd met zijn account. De web-app draait als “Ik”, het account dat de implementatie aanmaakt. Maakt de ontwikkelaar de implementatie, dan kan het script onder diens account gaan draaien en komen de foto’s in de verkeerde Drive terecht. Test dit bij de installatie.
+
 ## 1. Een overzichts-Sheet maken
 1. Ga naar sheets.google.com en maak een lege spreadsheet. Noem ze bv. **InspectSolutions overzicht**.
 2. Laat ze leeg. Het script maakt hierin het tabblad `Projecten` (alle projecten met links naar hun Sheet en fotomap) en het tabblad `Codes` (de codelijst, ingevuld door de app).
@@ -32,7 +44,7 @@ Links in Apps Script: **Projectinstellingen** (tandwiel) > **Script-eigenschappe
 | Naam | Verplicht | Waarde |
 |---|---|---|
 | `SECRET_KEY` | ja | een lange willekeurige tekst (minstens 24 tekens). Noteer ze: ze wordt in de app ingevoerd. |
-| `SHARE_EMAILS` | aanbevolen | e-mailadressen gescheiden door komma’s (bv. `christoph@voorbeeld.be`). Zij krijgen automatisch **bewerkrechten** op elke nieuwe projectmap, dus op de Sheet en de foto’s. |
+| `SHARE_EMAILS` | nee | e-mailadressen gescheiden door komma’s. Zij krijgen automatisch **bewerkrechten** op elke nieuwe projectmap, dus op de Sheet en de foto’s. Niet nodig in DEV (daar werkt enkel de ontwikkelaar). Zie “DEV en productie” hieronder. |
 | `FOLDER_ID` | nee | id van een bestaande Drive-map als hoofdmap. Zonder deze eigenschap maakt het script zelf de map **InspectSolutions** aan. |
 
 ## 4. Toestemmingen geven
