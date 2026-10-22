@@ -7,7 +7,7 @@
   /* Implementatie-ID van het Apps Script per omgeving. Het webadres is niet geheim (de sleutel beschermt het script).
      Het ID blijft gelijk zolang je een bestaande implementatie bijwerkt met "Nieuwe versie". */
   var SCRIPT_ID_DEV = "AKfycbyf-CPgG4cZr6rywx5WNLi70RHTwqlcPYLRuzkHwUmxGUp_slcSvHsa_mWVWTkOQ1yN";
-  var SCRIPT_ID_PRD = "AKfycbyf-CPgG4cZr6rywx5WNLi70RHTwqlcPYLRuzkHwUmxGUp_slcSvHsa_mWVWTkOQ1yN";
+  var SCRIPT_ID_PRD = "AKfycbxb9P7gaWWWyS2HMmjyaojghVO8GOlHrfWfySm9YsDQPkleZj7iXaVQ6gfG0FQ4QqDC";
   var scriptId = location.hostname === "inspect.gapsolutions.be" ? SCRIPT_ID_PRD : SCRIPT_ID_DEV;
   window.INSPECT_SCRIPT_URL = scriptId ? "https://script.google.com/macros/s/" + scriptId + "/exec" : "";
   if(location.hostname === "inspect.gapsolutions.be"){ root.className += " env-prd"; return; }
