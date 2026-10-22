@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.4.0"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.4.1"; /* houd gelijk met VERSION in sw.js */
 var CODES_VERSION = 2;   /* verhoog als de standaardcodelijst verandert (zie scripts/update-codes.js) */
 
 var $ = function(s){ return document.querySelector(s); };
@@ -1175,7 +1175,7 @@ function openCodes(){
   $("#codesVersion").textContent = codesVersionNote();
   $("#btnWipe").textContent = "Alle punten wissen";
   $("#btnResend").textContent = "Alles opnieuw versturen";
-  $("#cfgUrl").value = cfg ? cfg.url : "";
+  $("#cfgUrl").value = cfg ? cfg.url : (window.INSPECT_SCRIPT_URL || "");
   $("#cfgKey").value = "";
   $("#cfgKeyHint").textContent = cfg ? "Een sleutel is opgeslagen. Laat leeg om die te houden." : "";
   setCfgState("", "");

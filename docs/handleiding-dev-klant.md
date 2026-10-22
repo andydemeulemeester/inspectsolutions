@@ -14,7 +14,7 @@ De verbindingsgegevens (webadres en geheime sleutel) krijg je apart. Ze staan ni
 
 ## 2. Verbinding invoeren (eerste start)
 Bij de eerste start opent het scherm **Beheer** vanzelf.
-1. Vul bij **Webadres** het webadres uit je bericht in (het eindigt op `/exec`).
+1. Het **Webadres** staat al ingevuld (het eindigt op `/exec`).
 2. Vul bij **Geheime sleutel** de sleutel uit je bericht in.
 3. Tik **Verbinding testen**. Er moet **“Verbinding werkt.”** verschijnen.
 4. Tik **Verbinding opslaan** en daarna **Terug**.
