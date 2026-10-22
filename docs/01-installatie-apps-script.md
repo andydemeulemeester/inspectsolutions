@@ -1,6 +1,6 @@
 # Installatie van het Apps Script (projecten, Sheets en Drive)
 
-Doe dit één keer, ingelogd met het Google-account dat de **eigenaar** van alle projecten, Sheets en foto’s wordt. De opslag (15 GB gratis) telt voor dit account. Gebruik daarom bij voorkeur een apart account voor InspectSolutions, en deel de resultaten met de mensen die ze nodig hebben (zie `SHARE_EMAILS`). Duur: ongeveer 10 minuten.
+Doe dit één keer, ingelogd met het Google-account dat de **eigenaar** van alle projecten, Sheets en foto’s wordt. De opslag (15 GB gratis) telt voor dit account. Gebruik daarom bij voorkeur een apart account voor InspectSolutions, en deel de hoofdmap **InspectSolutions** in Drive met de mensen die de resultaten nodig hebben. Duur: ongeveer 10 minuten.
 
 ## Wat het script aanmaakt
 Per project in de app maakt het script zelf dit aan, in een hoofdmap **InspectSolutions** in Drive:
@@ -22,12 +22,11 @@ InspectSolutions/
 | | DEV (test) | Productie |
 |---|---|---|
 | Eigenaar van script, Sheets en foto’s | de ontwikkelaar | het Google-account van de klant |
-| `SHARE_EMAILS` | niet nodig | optioneel: het Gmail-adres van de ontwikkelaar, zodat die elke nieuwe projectmap kan beheren |
 | Toegang van de ontwikkelaar | is eigenaar | zie hieronder |
 
 **Toegang van de ontwikkelaar in productie** (de eigenaar doet dit één keer):
 1. Deel de **overzichts-Sheet** (waaraan het script gebonden is) met het Gmail-adres van de ontwikkelaar als **bewerker**. Daarmee kan die via **Extensies > Apps Script** het script openen en aanpassen en de script-eigenschappen wijzigen.
-2. Deel de hoofdmap **InspectSolutions** in Drive met dat adres als **bewerker**. Nieuwe projectmappen erven die rechten. Controleer dat bij het eerste project, of zet het adres in `SHARE_EMAILS`.
+2. Deel de hoofdmap **InspectSolutions** in Drive met dat adres als **bewerker**. Nieuwe projectmappen erven die rechten. Controleer dat bij het eerste project.
 3. **Implementeren doet bij voorkeur de eigenaar zelf**, ingelogd met zijn account. De web-app draait als “Ik”, het account dat de implementatie aanmaakt. Maakt de ontwikkelaar de implementatie, dan kan het script onder diens account gaan draaien en komen de foto’s in de verkeerde Drive terecht. Test dit bij de installatie.
 
 ## 1. Een overzichts-Sheet maken
@@ -44,7 +43,6 @@ Links in Apps Script: **Projectinstellingen** (tandwiel) > **Script-eigenschappe
 | Naam | Verplicht | Waarde |
 |---|---|---|
 | `SECRET_KEY` | ja | een lange willekeurige tekst (minstens 24 tekens). Noteer ze: ze wordt in de app ingevoerd. |
-| `SHARE_EMAILS` | nee | e-mailadressen gescheiden door komma’s. Zij krijgen automatisch **bewerkrechten** op elke nieuwe projectmap, dus op de Sheet en de foto’s. Niet nodig in DEV (daar werkt enkel de ontwikkelaar). Zie “DEV en productie” hieronder. |
 | `FOLDER_ID` | nee | id van een bestaande Drive-map als hoofdmap. Zonder deze eigenschap maakt het script zelf de map **InspectSolutions** aan. |
 
 ## 4. Toestemmingen geven

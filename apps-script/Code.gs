@@ -13,10 +13,9 @@
  * Script-eigenschappen (Projectinstellingen > Script-eigenschappen):
  *   SECRET_KEY    verplicht   de geheime sleutel die ook in de app wordt ingevoerd
  *   FOLDER_ID     optioneel   id van de Drive-hoofdmap voor alle projecten (anders wordt er een aangemaakt)
- *   SHARE_EMAILS  optioneel   e-mailadressen (gescheiden door komma's) die elk nieuw project mogen bewerken
  */
 
-var VERSION = '1.3.0';
+var VERSION = '1.3.1';
 // Versie van het protocol tussen de app en dit script. De app weigert te synchroniseren als dit getal lager is dan wat
 // ze nodig heeft (REQUIRED_SCRIPT_API in public/app.js). Verhoog het hier én daar wanneer de app nieuwe acties of
 // gegevens stuurt die een ouder script niet begrijpt.
@@ -120,7 +119,6 @@ function project_(p, create) {
     sheetUrl: spreadsheet.getUrl(), folderUrl: folder.getUrl(), name: name
   };
   saveInfo_(id, newInfo);
-  shareWith_(folder);
   var sheet = punten_(spreadsheet);
   indexProject_(p, newInfo);
   return { id: id, info: newInfo, ss: spreadsheet, sheet: sheet, folder: folder, photos: photos };
@@ -128,15 +126,6 @@ function project_(p, create) {
 
 function saveInfo_(id, info) {
   PropertiesService.getScriptProperties().setProperty('PROJ_' + id, JSON.stringify(info));
-}
-
-/** Geeft de e-mailadressen uit SHARE_EMAILS bewerkrechten op de projectmap (en dus op Sheet en foto's). */
-function shareWith_(folder) {
-  String(prop_('SHARE_EMAILS') || '').split(',').forEach(function (mail) {
-    mail = mail.trim();
-    if (!mail) return;
-    try { folder.addEditor(mail); } catch (e) { /* ongeldig adres of niet toegestaan: project blijft werken */ }
-  });
 }
 
 /** Naam van de Sheet en de projectmap: {projectnummer}_{naam in kleine letters aaneen}_{jjjjmmdd}. */
