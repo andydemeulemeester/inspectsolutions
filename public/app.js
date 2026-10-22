@@ -838,7 +838,7 @@ SyncError.prototype = Object.create(Error.prototype);
 /* Controle van het Apps Script: de app stuurt pas iets als het script een recent genoeg protocol (API) heeft.
    Verhoog REQUIRED_SCRIPT_API samen met API in apps-script/Code.gs als de app nieuwe acties of gegevens stuurt. */
 var REQUIRED_SCRIPT_API = 1;
-var scriptCheckedAt = 0, scriptProblem = "";
+var scriptCheckedAt = 0, scriptProblem = "", scriptInfo = null;
 function scriptProblemFor(res){
   var api = Number(res && res.api) || 0;
   if(api >= REQUIRED_SCRIPT_API) return "";
@@ -849,6 +849,7 @@ async function checkScript(){
   /* hoogstens eens per 5 minuten opnieuw controleren, tenzij er een probleem is */
   if(!scriptProblem && scriptCheckedAt && Date.now() - scriptCheckedAt < 300000) return;
   var res = await post({action: "ping"});
+  scriptInfo = res;
   scriptProblem = scriptProblemFor(res);
   scriptCheckedAt = scriptProblem ? 0 : Date.now();
   if(scriptProblem) throw new SyncError("script", scriptProblem);
@@ -1199,6 +1200,7 @@ function openCodes(){
   $("#cfgKey").value = "";
   $("#cfgKeyHint").textContent = cfg ? "Een sleutel is opgeslagen. Laat leeg om die te houden." : "";
   setCfgState("", "");
+  renderScriptInfo();
   $("#firstRun").hidden = !!cfg || fixed;
   renderStorage();
   pushLayer("codes");
@@ -1220,6 +1222,36 @@ function readCfgInputs(){
   if(!key){ setCfgState("Vul de geheime sleutel in.", "bad"); return null; }
   return {url: url, key: key};
 }
+/* Toont welk Apps Script er antwoordt: webadres, versie, script-id en de overzichts-Sheet waarnaar het schrijft. */
+function renderScriptInfo(){
+  var el = $("#cfgInfo");
+  el.textContent = "";
+  var c = cfg || (window.INSPECT_SCRIPT_URL ? {url: window.INSPECT_SCRIPT_URL} : null);
+  if(!c) return;
+  var m = String(c.url).match(/\/s\/([^/]+)\/exec/);
+  var lines = [];
+  if(m) lines.push("Webadres (implementatie-ID): " + m[1].slice(0, 8) + "…" + m[1].slice(-8));
+  if(scriptInfo && scriptInfo.ok){
+    lines.push("Script: versie " + (scriptInfo.version || "?") + (scriptInfo.script ? ", project-ID " + String(scriptInfo.script).slice(0, 8) + "…" + String(scriptInfo.script).slice(-6) : ""));
+    if(scriptInfo.bound === true) lines.push("Het script is gebonden aan de overzichts-Sheet.");
+    if(scriptInfo.bound === false) lines.push("Het script staat los van een Sheet.");
+  }else{
+    lines.push("Tik op Verbinding testen om de versie van het script te zien.");
+  }
+  lines.forEach(function(t){ var d = document.createElement("div"); d.textContent = t; el.appendChild(d); });
+  var ov = scriptInfo && scriptInfo.overview;
+  if(ov && /^https:\/\/docs\.google\.com\//.test(ov.url || "")){
+    var d = document.createElement("div");
+    d.appendChild(document.createTextNode("Overzicht: "));
+    var link = document.createElement("a");
+    link.href = ov.url; link.target = "_blank"; link.rel = "noopener noreferrer";
+    link.textContent = ov.name || "openen";
+    d.appendChild(link);
+    el.appendChild(d);
+  }else if(scriptInfo && scriptInfo.ok && scriptInfo.version && scriptInfo.overview === undefined){
+    var d2 = document.createElement("div"); d2.textContent = "Dit script toont de overzichts-Sheet nog niet (verouderd)."; el.appendChild(d2);
+  }
+}
 async function testCfg(){
   var c = readCfgInputs();
   if(!c) return;
@@ -1228,6 +1260,7 @@ async function testCfg(){
   btn.disabled = true; setCfgState("Verbinding testen…", "");
   try{
     var res = await post({action: "ping"}, c);
+    scriptInfo = res; renderScriptInfo();
     var problem = scriptProblemFor(res);
     if(problem) setCfgState("Verbinding werkt, maar: " + problem, "bad");
     else setCfgState("Verbinding werkt.", "ok");

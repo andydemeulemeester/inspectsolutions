@@ -16,7 +16,7 @@
  *   OVERVIEW_ID   automatisch bij een los script (niet gebonden aan een Sheet): de zelf aangemaakte overzichts-Sheet
  */
 
-var VERSION = '1.3.3';
+var VERSION = '1.4.0';
 // Versie van het protocol tussen de app en dit script. De app weigert te synchroniseren als dit getal lager is dan wat
 // ze nodig heeft (REQUIRED_SCRIPT_API in public/app.js). Verhoog het hier én daar wanneer de app nieuwe acties of
 // gegevens stuurt die een ouder script niet begrijpt.
@@ -59,7 +59,7 @@ function doPost(e) {
     lock.waitLock(30000);
     locked = true;
     switch (req.action) {
-      case 'ping':    return json_({ ok: true, version: VERSION, api: API });
+      case 'ping':    return json_(ping_());
       case 'project': return json_(projectAction_(req.project));
       case 'upsert':  return json_(upsert_(req));
       case 'photo':   return json_(photo_(req));
@@ -72,6 +72,19 @@ function doPost(e) {
   } finally {
     if (locked) { try { lock.releaseLock(); } catch (x) {} }
   }
+}
+
+/** Antwoord op ping: versie, protocolniveau en waar dit script naartoe schrijft (de app toont dat in Beheer). */
+function ping_() {
+  var out = { ok: true, version: VERSION, api: API, script: ScriptApp.getScriptId() };
+  try {
+    // Enkel opzoeken, nooit aanmaken: een ping mag niets wijzigen.
+    var ov = SpreadsheetApp.getActive();
+    out.bound = !!ov;
+    if (!ov && prop_('OVERVIEW_ID')) ov = SpreadsheetApp.openById(prop_('OVERVIEW_ID'));
+    if (ov) out.overview = { name: ov.getName(), url: ov.getUrl() };
+  } catch (e) { out.overview = null; }
+  return out;
 }
 
 /* ---------- Projecten ---------- */
