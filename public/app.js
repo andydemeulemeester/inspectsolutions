@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.3.0"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.3.1"; /* houd gelijk met VERSION in sw.js */
 var CODES_VERSION = 2;   /* verhoog als de standaardcodelijst verandert (zie scripts/update-codes.js) */
 
 var $ = function(s){ return document.querySelector(s); };
@@ -709,12 +709,24 @@ async function addFiles(fileList){
 }
 
 /* item kiezen */
+/* welke groepen openstaan: onthouden zolang de app open is. Eerste keer: enkel de groep van het gekozen item, anders de eerste groep. */
+var pickOpen = null;
 function openPicker(slot){
   pickSlot = slot;
   $("#pickQ").value = "";
+  var cur = draft && draft.items[slot] ? draft.items[slot].code : null;
+  if(!pickOpen){
+    pickOpen = {};
+    var first = codes.length ? groupOf(codes[0].code) : null;
+    pickOpen[cur ? groupOf(cur) : first] = true;
+  }else if(cur){
+    pickOpen[groupOf(cur)] = true;      /* het gekozen item moet zichtbaar zijn */
+  }
   renderPick("");
   pushLayer("picker");
-  setTimeout(function(){ $("#pickQ").focus(); }, 50);
+  var on = $("#pickList .opt.on");
+  if(on) on.scrollIntoView({block: "center"});
+  else setTimeout(function(){ $("#pickQ").focus(); }, 50);
 }
 function renderPick(q){
   q = q.trim().toLowerCase();
@@ -729,11 +741,16 @@ function renderPick(q){
     byGroup[g].push(c);
   });
   order.sort(function(a, b){ return groupRank(a) - groupRank(b); });   /* stabiel: onbekende groepen blijven in lijstvolgorde */
+  /* bij zoeken staan alle groepen met resultaat open; anders bepaalt de gebruiker met de kop wat open of dicht is */
+  var searching = q !== "";
   $("#pickList").innerHTML = order.map(function(g){
-    return '<div class="grp" role="heading" aria-level="3">' + esc(groupTitle(g)) + ' <span class="grpn">' + byGroup[g].length + "</span></div>" +
+    var open = searching || !!(pickOpen && pickOpen[g]);
+    return '<button type="button" class="grp" data-g="' + esc(g) + '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="grp-' + esc(g) + '"' + (searching ? " disabled" : "") + ">" +
+      '<span class="chev" aria-hidden="true"></span><span class="grpt">' + esc(groupTitle(g)) + '</span><span class="grpn">' + byGroup[g].length + "</span></button>" +
+      '<div class="grpbody" id="grp-' + esc(g) + '"' + (open ? "" : " hidden") + ">" +
       byGroup[g].map(function(c){
         return '<button type="button" class="opt' + (c.code === cur ? " on" : "") + '" data-code="' + esc(c.code) + '"><span class="code">' + esc(c.code) + "</span><span>" + esc(c.label) + "</span></button>";
-      }).join("");
+      }).join("") + "</div>";
   }).join("");
 }
 
@@ -1279,6 +1296,16 @@ function bind(){
     renderItems(); back();
   });
   $("#pickList").addEventListener("click", function(e){
+    var head = e.target.closest(".grp");
+    if(head){
+      /* groep open- of dichtklappen, zonder de lijst opnieuw op te bouwen (de scrollpositie blijft) */
+      var g = head.getAttribute("data-g"), open = head.getAttribute("aria-expanded") !== "true";
+      pickOpen = pickOpen || {};
+      pickOpen[g] = open;
+      head.setAttribute("aria-expanded", open ? "true" : "false");
+      $("#grp-" + g).hidden = !open;
+      return;
+    }
     var b = e.target.closest(".opt");
     if(!b) return;
     var code = b.getAttribute("data-code");
