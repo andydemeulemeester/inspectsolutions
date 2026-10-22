@@ -202,6 +202,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:14px 4px;min-height:54px;cursor:pointer}
 .opt .code{margin-top:1px}
 .opt.on{background:var(--surface2)}
+#pickList{padding-top:0}   /* de eerste groepskop sluit direct aan op de zoekbalk */
 /* groepskop (open- en dichtklappen): eigen kleur uit het palet (de kleur van geselecteerde knoppen) met witte tekst */
 .grp{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:12px;width:calc(100% + 32px);margin:0 -16px;min-height:48px;padding:8px 16px;background:var(--sel);color:var(--sel-ink);border:0;border-top:1px solid rgba(255,255,255,.18);text-align:left;font-weight:800;font-size:15px;cursor:pointer}
 .grp .grpt{flex:1;min-width:0}

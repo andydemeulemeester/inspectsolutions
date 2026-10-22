@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.3.1"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.3.2"; /* houd gelijk met VERSION in sw.js */
 var CODES_VERSION = 2;   /* verhoog als de standaardcodelijst verandert (zie scripts/update-codes.js) */
 
 var $ = function(s){ return document.querySelector(s); };

@@ -2,7 +2,7 @@
    De nieuwe versie wordt op de achtergrond binnengehaald en pas actief als de gebruiker
    op "Nu bijwerken" tikt of de app volledig sluit. Tot dan blijft de oude versie werken.
    Verhoog VERSION bij elke wijziging aan de bestanden (en in app.js). */
-var VERSION = "1.3.1";
+var VERSION = "1.3.2";
 var CACHE = "inspect-shell-" + VERSION;
 var SHELL = [
   "index.html",
