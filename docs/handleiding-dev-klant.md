@@ -102,6 +102,7 @@ Vink af wat je gedaan hebt en noteer wat niet werkte.
 | Probleem | Oplossing |
 |---|---|
 | “Sleutel geweigerd” | Voer de sleutel in Beheer opnieuw in (kopiëren en plakken). |
+| “Apps Script is verouderd” | De app stuurt dan niets, alles blijft veilig op de gsm. Meld dit aan de ontwikkelaar: het script moet bijgewerkt worden. Tik daarna **Nu synchroniseren**. |
 | “Onverwacht antwoord” | Controleer het webadres: het moet eindigen op `/exec`. |
 | Punten blijven “Te versturen” | Controleer internet, tik **Nu synchroniseren** en lees de “Laatste fout” in de synchronisatiebalk. |
 | De app vraagt een e-mailcode zonder internet | Open de app voortaan eerst met internet (zie hierboven, “Zonder internet”). |

@@ -16,7 +16,11 @@
  *   SHARE_EMAILS  optioneel   e-mailadressen (gescheiden door komma's) die elk nieuw project mogen bewerken
  */
 
-var VERSION = '1.2.0';
+var VERSION = '1.3.0';
+// Versie van het protocol tussen de app en dit script. De app weigert te synchroniseren als dit getal lager is dan wat
+// ze nodig heeft (REQUIRED_SCRIPT_API in public/app.js). Verhoog het hier én daar wanneer de app nieuwe acties of
+// gegevens stuurt die een ouder script niet begrijpt.
+var API = 1;
 var TZ = 'Europe/Brussels';
 var PUNTEN_SHEET = 'Punten';
 var PROJECTEN_SHEET = 'Projecten';
@@ -41,7 +45,7 @@ function initialiseer() {
 }
 
 function doGet() {
-  return json_({ ok: true, app: 'InspectSolutions', version: VERSION });
+  return json_({ ok: true, app: 'InspectSolutions', version: VERSION, api: API });
 }
 
 function doPost(e) {
@@ -55,7 +59,7 @@ function doPost(e) {
     lock.waitLock(30000);
     locked = true;
     switch (req.action) {
-      case 'ping':    return json_({ ok: true, version: VERSION });
+      case 'ping':    return json_({ ok: true, version: VERSION, api: API });
       case 'project': return json_(projectAction_(req.project));
       case 'upsert':  return json_(upsert_(req));
       case 'photo':   return json_(photo_(req));

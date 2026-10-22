@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.3.2"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.4.0"; /* houd gelijk met VERSION in sw.js */
 var CODES_VERSION = 2;   /* verhoog als de standaardcodelijst verandert (zie scripts/update-codes.js) */
 
 var $ = function(s){ return document.querySelector(s); };
@@ -414,16 +414,24 @@ function renderProjectBar(){
 }
 function renderSync(progress, total){
   var pending = pendingRecords();
+  var waiting = pendingProjects() + tombCount + (codesDirty ? 1 : 0);   /* projecten, verwijderingen en codelijst die nog moeten */
   var box = $("#syncBox"), title = $("#syncTitle"), sub = $("#syncSub"), btn = $("#btnSync");
-  box.className = "sync" + (pending ? " pending" : "");
+  box.className = "sync" + (pending || waiting ? " pending" : "");
   btn.textContent = cfg ? "Nu synchroniseren" : "Instellen";
-  btn.disabled = syncing || (!!cfg && pendingAll() === 0);
+  btn.disabled = syncing || (!!cfg && pendingAll() === 0 && !scriptProblem);
   if(syncing){
     title.textContent = total ? "Synchroniseren " + progress + " van " + total : "Synchroniseren…";
     sub.textContent = "";
   }else if(!cfg){
     title.textContent = "Verbinding niet ingesteld";
     sub.textContent = "Stel de verbinding in via Beheer om te synchroniseren.";
+  }else if(scriptProblem){
+    title.textContent = "Apps Script is verouderd";
+    sub.textContent = scriptProblem + (pending || waiting ? " Er is niets verstuurd; alles blijft veilig op deze gsm." : "");
+  }else if(pending === 0 && waiting > 0){
+    title.textContent = pendingProjects() ? "Project wacht op synchronisatie" : "Wacht op synchronisatie";
+    sub.textContent = syncErr ? "Laatste fout: " + syncErr
+      : (isOnline() ? "Het wordt zo verstuurd." : "Het blijft veilig op deze gsm tot er verbinding is.");
   }else if(pending === 0){
     title.textContent = records.length ? "Alles gesynchroniseerd" : "Nog geen punten";
     sub.textContent = syncErr ? "Laatste fout: " + syncErr : "";
@@ -827,6 +835,25 @@ function SyncError(kind, message){
 }
 SyncError.prototype = Object.create(Error.prototype);
 
+/* Controle van het Apps Script: de app stuurt pas iets als het script een recent genoeg protocol (API) heeft.
+   Verhoog REQUIRED_SCRIPT_API samen met API in apps-script/Code.gs als de app nieuwe acties of gegevens stuurt. */
+var REQUIRED_SCRIPT_API = 1;
+var scriptCheckedAt = 0, scriptProblem = "";
+function scriptProblemFor(res){
+  var api = Number(res && res.api) || 0;
+  if(api >= REQUIRED_SCRIPT_API) return "";
+  return "Het Apps Script is verouderd" + (res && res.version ? " (versie " + res.version + ")" : "") +
+    ". Plak de nieuwste Code.gs in Apps Script en implementeer een nieuwe versie.";
+}
+async function checkScript(){
+  /* hoogstens eens per 5 minuten opnieuw controleren, tenzij er een probleem is */
+  if(!scriptProblem && scriptCheckedAt && Date.now() - scriptCheckedAt < 300000) return;
+  var res = await post({action: "ping"});
+  scriptProblem = scriptProblemFor(res);
+  scriptCheckedAt = scriptProblem ? 0 : Date.now();
+  if(scriptProblem) throw new SyncError("script", scriptProblem);
+}
+
 var DELAYS = [5, 15, 45, 120, 300];
 var attempts = 0, retryTimer = null;
 function resetRetry(){ attempts = 0; clearTimeout(retryTimer); retryTimer = null; }
@@ -858,7 +885,10 @@ async function post(payload, override){
   try{ data = await res.json(); }
   catch(e){ throw new SyncError("server", "Onverwacht antwoord. Controleer het webadres en of de toegang op ‘iedereen’ staat."); }
   if(!data || !data.ok){
-    throw new SyncError(data && data.code === "auth" ? "auth" : "server", (data && data.error) || "Onbekende fout van de server.");
+    var msg = (data && data.error) || "Onbekende fout van de server.";
+    /* een verouderd script kent de nieuwe acties niet */
+    if(/^Onbekende actie/.test(msg)) msg = "Het Apps Script is verouderd (" + msg + "). Plak de nieuwste Code.gs en implementeer een nieuwe versie.";
+    throw new SyncError(data && data.code === "auth" ? "auth" : "server", msg);
   }
   return data;
 }
@@ -924,6 +954,7 @@ async function syncPass(){
     }
   }
   try{
+    await checkScript();          /* een verouderd script: niets versturen, zodat er niets op de verkeerde plaats terechtkomt */
     if(codesDirty){
       await unit(async function(){
         await post({action: "codes", codes: codes, version: codesVersionLabel()});
@@ -954,8 +985,11 @@ async function syncPass(){
       });
     }
     for(var j = 0; j < recs.length; j++){
-      var id = recs[j].id;
+      var id = recs[j].id, projId = recs[j].project;
       var ok = await unit(async function(){
+        /* punten gaan pas naar het script als hun project daar bestaat; anders zouden ze op de verkeerde plaats terechtkomen */
+        var pj = projectById(projId);
+        if(!pj || (pj.syncedRev || 0) !== pj.rev) throw new SyncError("server", "Project " + (pj ? pj.number : "?") + " is nog niet gesynchroniseerd. De punten wachten.");
         for(var guard = 0; guard < 400; guard++){
           var r = await Store.get(id);
           if(!r || r.tomb || isSynced(r)) break;
@@ -989,7 +1023,7 @@ async function trySync(manual){
     if(manual){ toast("Stel eerst de verbinding in."); openCodes(); }
     return;
   }
-  if(pendingAll() === 0){ if(manual) toast("Alles is al gesynchroniseerd."); return; }
+  if(pendingAll() === 0 && !scriptProblem){ if(manual) toast("Alles is al gesynchroniseerd."); return; }
   if(!isOnline()){ if(manual) toast("Geen verbinding. De punten blijven veilig op deze gsm."); return; }
   if(manual) resetRetry();
   clearTimeout(retryTimer);
@@ -1009,6 +1043,9 @@ async function trySync(manual){
     if(out.done) toast(out.done + (out.done === 1 ? " punt" : " punten") + " verstuurd.");
   }else if(out.kind === "auth"){
     toast("Sleutel geweigerd. Controleer de verbinding in Beheer.");
+  }else if(out.kind === "script"){
+    toast("Het Apps Script is verouderd. Er is niets verstuurd.");
+    scheduleRetry();
   }else{
     if(out.done) toast("Niet alles is verstuurd. De rest blijft op de gsm.");
     scheduleRetry();
@@ -1137,6 +1174,7 @@ function openCodes(){
   $("#codesCount").textContent = codes.length + " items";
   $("#codesVersion").textContent = codesVersionNote();
   $("#btnWipe").textContent = "Alle punten wissen";
+  $("#btnResend").textContent = "Alles opnieuw versturen";
   $("#cfgUrl").value = cfg ? cfg.url : "";
   $("#cfgKey").value = "";
   $("#cfgKeyHint").textContent = cfg ? "Een sleutel is opgeslagen. Laat leeg om die te houden." : "";
@@ -1167,8 +1205,10 @@ async function testCfg(){
   var btn = $("#btnCfgTest");
   btn.disabled = true; setCfgState("Verbinding testen…", "");
   try{
-    await post({action: "ping"}, c);
-    setCfgState("Verbinding werkt.", "ok");
+    var res = await post({action: "ping"}, c);
+    var problem = scriptProblemFor(res);
+    if(problem) setCfgState("Verbinding werkt, maar: " + problem, "bad");
+    else setCfgState("Verbinding werkt.", "ok");
   }catch(e){
     setCfgState(e.message || "Verbinding mislukt.", "bad");
   }
@@ -1178,6 +1218,7 @@ async function saveCfg(){
   var c = readCfgInputs();
   if(!c) return;
   cfg = c;
+  scriptCheckedAt = 0; scriptProblem = "";
   await Store.setMeta("config", c);
   await Store.setMeta("codesDirty", true);
   codesDirty = true;
@@ -1394,7 +1435,28 @@ function bind(){
     var list = parseCodes(DEFAULT_TEXT);
     $("#codesTa").value = codesToText(list);
     $("#codesCount").textContent = list.length + " items";
-    $("#codesVersion").textContent = "Versie van de lijst: " + CODES_VERSION + " (standaard)";    toast("Standaardlijst ingevuld. Tik op ‘Codelijst opslaan’ om te bewaren.");
+    $("#codesVersion").textContent = "Versie van de lijst: " + CODES_VERSION + " (standaard)";
+    toast("Standaardlijst ingevuld. Tik op ‘Codelijst opslaan’ om te bewaren.");
+  });
+  $("#btnResend").addEventListener("click", function(){
+    armButton($("#btnResend"), "Tik nogmaals om alles opnieuw te versturen", async function(){
+      /* alle punten, foto's en projecten gelden weer als nog niet verstuurd; het script werkt bestaande rijen bij en vervangt foto's */
+      var all = await Store.all();
+      for(var i = 0; i < all.length; i++){
+        if(all[i].tomb) continue;
+        await Store.update(all[i].id, function(x){
+          x.rev = (x.rev || 0) + 1; x.syncedNr = 0;
+          (x.photos || []).forEach(function(p){ p.up = false; p.upOrig = false; });
+        });
+      }
+      projects.forEach(function(p){ p.rev = (p.rev || 0) + 1; });
+      await saveProjects();
+      codesDirty = true; await Store.setMeta("codesDirty", true);
+      await load(); renderAll(); notifyOthers();
+      $("#btnResend").textContent = "Alles opnieuw versturen";
+      toast("Alles staat klaar om opnieuw verstuurd te worden.");
+      resetRetry(); trySync(true);
+    });
   });
   $("#btnWipe").addEventListener("click", function(){
     var open = pendingRecords();

@@ -60,6 +60,7 @@ Tik in het formulier op een foto. Het scherm **Foto bewerken** opent. De foto op
 | Probleem | Oplossing |
 |---|---|
 | “Sleutel geweigerd” | Sleutel in Beheer opnieuw invoeren. |
+| “Apps Script is verouderd” | De app stuurt dan niets, alles blijft veilig op de gsm. Laat de beheerder de nieuwste `Code.gs` in Apps Script plakken en een nieuwe versie implementeren (zie de installatiehandleiding). Tik daarna **Nu synchroniseren**. |
 | “Onverwacht antwoord” | Controleer het webadres (eindigt op `/exec`) en of de toegang van de web-app op *Iedereen* staat. |
 | Punten blijven “Te versturen” | Controleer internet, tik **Nu synchroniseren**, lees de “Laatste fout”. |
 | App vraagt e-mailcode zonder internet | Open de app voortaan vóór de rondgang met internet. |

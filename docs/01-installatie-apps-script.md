@@ -65,6 +65,13 @@ In de app: **Beheer > Verbinding**, vul URL en sleutel in, tik **Verbinding test
 ## Het script later aanpassen
 Na elke codewijziging: **Implementeren > Implementaties beheren > potlood > Versie: Nieuwe versie > Implementeren**. De URL blijft hetzelfde. **Dit is verplicht na elke update van `Code.gs`**: de app stuurt dan nieuwe gegevens (projecten) die een oude versie niet begrijpt.
 
+## Controle op de scriptversie
+De app controleert vóór elke synchronisatie (hoogstens eens per 5 minuten) of het script recent genoeg is. Het script meldt daarvoor een **API-niveau** (`API` bovenaan `Code.gs`), de app eist een minimum (`REQUIRED_SCRIPT_API` in `public/app.js`).
+- Is het script verouderd, dan stuurt de app **niets** en toont ze de fout “Apps Script is verouderd” in de synchronisatiebalk. Alles blijft veilig op de gsm.
+- Ook **Verbinding testen** in Beheer meldt dit.
+- Oplossing: plak de nieuwste `Code.gs` en implementeer een nieuwe versie (zie hierboven). De app probeert het daarna zelf opnieuw, of tik **Nu synchroniseren**.
+- **Voor ontwikkelaars:** verhoog `API` in `Code.gs` én `REQUIRED_SCRIPT_API` in `public/app.js` telkens als de app nieuwe acties of gegevens stuurt die een ouder script niet begrijpt.
+
 ## Goed om te weten
 - Een punt wordt op `ID` bijgewerkt (geen dubbele rijen bij opnieuw versturen). Het nummer van een punt mag in de app gewijzigd worden: de rij wordt bijgewerkt en de foto’s worden hernoemd.
 - Een project in de app krijgt pas een Sheet en fotomap bij de eerste synchronisatie. Wordt de **naam** van een project in de app gewijzigd, dan worden de Sheet en de projectmap hernoemd. Het **projectnummer** kan na de eerste synchronisatie niet meer gewijzigd worden (het zit in alle bestandsnamen). De aanmaakdatum in de naam blijft.
