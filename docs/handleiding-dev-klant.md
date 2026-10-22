@@ -34,7 +34,7 @@ Elk project heeft een eigen nummering, een eigen Google Sheet en een eigen fotom
 
 ## 4. Een punt invoeren
 1. Tik **Nieuw punt**. Het tijdstip is automatisch. Het **nummer** is het hoogste bestaande nummer + 1, maar je mag het zelf aanpassen (bv. van 6 naar 10). Het volgende punt krijgt dan 11. Een nummer moet een geheel getal van 1 of hoger zijn en mag nog niet in gebruik zijn. Anders wordt het veld rood en kun je niet opslaan. Onder het veld staat welk nummer daarna volgt.
-2. Tik op **Item 1** en zoek op code of tekst. Een tweede item kan via **Tweede item toevoegen**.
+2. Tik op **Item 1** en zoek op code of tekst. De lijst is gegroepeerd per type doorvoering: **B** (buis), **K** (kabel), **G** (kabelgoot), **L** (luchtkanaal) en **A** (andere: geen van deze, of een mengeling). Een tweede item kan via **Tweede item toevoegen**.
 3. **Foto nemen** of **Uit galerij** (meerdere tegelijk kan). Tik op **×** om een foto te verwijderen.
    **Foto bewerken:** tik op een foto om erop te tekenen. Kies **Pen**, **Pijl**, **Ovaal** of **Tekst**, een kleur (rood, geel, wit, zwart) en een dikte (dun, middel, dik). Met **Ongedaan**, **Opnieuw** en **Alles wissen** kun je stappen terugdraaien. **Klaar** bewaart de tekening, **Annuleren** gooit ze weg. De originele foto blijft altijd bewaard en een bewerkte foto herken je aan het potloodicoon.
 4. Typ een **opmerking** indien nodig.
@@ -76,7 +76,7 @@ Vink af wat je gedaan hebt en noteer wat niet werkte.
 - [ ] Het nummer van een nieuw punt aanpassen (bv. naar 10) en controleren dat het volgende punt 11 krijgt
 - [ ] Een nummer proberen dat al bestaat: het veld wordt rood en opslaan lukt niet
 - [ ] Het nummer van een bestaand punt wijzigen: in de Sheet verandert die rij, er komt geen extra rij bij
-- [ ] Zoeken in de itemlijst op code en op tekst
+- [ ] Zoeken in de itemlijst op code en op tekst, en controleren dat de items onder de juiste groep staan (B, K, G, A) en dat de codes kloppen met jouw lijst
 - [ ] Filter Alle / NIET OK / OK in de lijst
 
 **Zonder internet** (de belangrijkste test)

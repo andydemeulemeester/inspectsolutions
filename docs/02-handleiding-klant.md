@@ -25,7 +25,7 @@ Bovenaan het beginscherm staat het **project** waaraan je werkt (projectnummer e
 
 ## Tijdens de rondgang
 1. **Nieuw punt**. Het tijdstip is automatisch. Het **nummer** is het hoogste bestaande nummer + 1, maar je mag het aanpassen (bv. van 6 naar 10; het volgende punt krijgt dan 11). Het moet een geheel getal van 1 of hoger zijn dat nog niet gebruikt is, anders wordt het veld rood en kun je niet opslaan.
-2. Tik op **Item 1** en zoek op code of tekst. Een tweede item kan via **Tweede item toevoegen**.
+2. Tik op **Item 1** en zoek op code of tekst. De lijst is gegroepeerd per type doorvoering: **B** (buis), **K** (kabel), **G** (kabelgoot), **L** (luchtkanaal) en **A** (andere: geen van deze, of een mengeling). Een tweede item kan via **Tweede item toevoegen**.
 3. **Foto nemen** of **Uit galerij** (meerdere tegelijk mogelijk). Tik op een foto om ze groot te zien, op **×** om ze te verwijderen.
    **Foto bewerken:** tik op een foto om erop te tekenen (zie “Op een foto tekenen” hieronder). Een foto met tekening heeft een klein potloodicoon.
 4. Typ een **opmerking** indien nodig.

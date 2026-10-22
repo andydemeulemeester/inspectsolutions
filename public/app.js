@@ -1,11 +1,16 @@
 (function(){
 "use strict";
 
-var VERSION = "1.2.1"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.3.0"; /* houd gelijk met VERSION in sw.js */
 var CODES_VERSION = 2;   /* verhoog als de standaardcodelijst verandert (zie scripts/update-codes.js) */
 
 var $ = function(s){ return document.querySelector(s); };
 var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
+
+/* Groepen = type doorvoering: de letter vóór het streepje in de code (B-1 hoort bij B). Bijgehouden door scripts/update-codes.js */
+var GROUPS = [{"letter":"B","name":"Buis"},{"letter":"K","name":"Kabel"},{"letter":"G","name":"Kabelgoot"},{"letter":"L","name":"Luchtkanaal"},{"letter":"A","name":"Andere"}];
+/* Hashes van eerdere standaardlijsten, zodat een ongewijzigde oude lijst vervangen wordt (door scripts/update-codes.js bijgehouden) */
+var KNOWN_DEFAULT_HASHES = [838722764];
 
 /* ---------- Standaard codelijst (80 items van de klant, ongewijzigd) ---------- */
 var DEFAULT_TEXT = [
@@ -107,10 +112,39 @@ function parseCodes(text){
   });
   return out;
 }
+function hashText(t){
+  var h = 5381;
+  for(var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
+  return h >>> 0;
+}
 /* Versie van de lijst: "2" voor de standaardlijst, "2 (aangepast)" als ze in Beheer gewijzigd is */
 function codesVersionLabel(){
   var isDefault = codesToText(codes) === codesToText(parseCodes(DEFAULT_TEXT));
   return String(CODES_VERSION) + (isDefault ? "" : " (aangepast)");
+}
+/* Tekst onder de codelijst in Beheer, met een hint als er een nieuwere standaardlijst is dan waarop de eigen lijst gebaseerd is */
+var codesBase = CODES_VERSION;
+function codesVersionNote(){
+  var s = "Versie van de lijst: " + codesVersionLabel();
+  if(codesVersionLabel().indexOf("aangepast") >= 0 && codesBase < CODES_VERSION){
+    s += ". Er is een nieuwere standaardlijst (versie " + CODES_VERSION + "). Tik op ‘Standaardlijst herstellen’ om ze te gebruiken.";
+  }
+  return s;
+}
+/* Groep van een code: de letters vóór het streepje of het eerste cijfer ("B-1" geeft "B"); anders "Overig" */
+function groupOf(code){
+  var m = /^([A-Za-z]+)[-\s]?\d/.exec(code);
+  return m ? m[1].toUpperCase() : "Overig";
+}
+function groupTitle(letter){
+  for(var i = 0; i < GROUPS.length; i++){
+    if(GROUPS[i].letter === letter) return letter + " · " + GROUPS[i].name;
+  }
+  return letter === "Overig" ? "Overig" : "Groep " + letter;
+}
+function groupRank(letter){
+  for(var i = 0; i < GROUPS.length; i++){ if(GROUPS[i].letter === letter) return i; }
+  return GROUPS.length;
 }
 function codesToText(list){
   return list.map(function(c){ return c.code + " | " + c.label; }).join("\n");
@@ -686,9 +720,21 @@ function renderPick(q){
   q = q.trim().toLowerCase();
   var cur = draft && draft.items[pickSlot] ? draft.items[pickSlot].code : null;
   var rows = codes.filter(function(c){ return !q || (c.code + " " + c.label).toLowerCase().indexOf(q) !== -1; });
-  $("#pickList").innerHTML = rows.length ? rows.map(function(c){
-    return '<button type="button" class="opt' + (c.code === cur ? " on" : "") + '" data-code="' + esc(c.code) + '"><span class="code">' + esc(c.code) + "</span><span>" + esc(c.label) + "</span></button>";
-  }).join("") : '<div class="empty tight">Geen item gevonden.</div>';
+  if(!rows.length){ $("#pickList").innerHTML = '<div class="empty tight">Geen item gevonden.</div>'; return; }
+  /* per groep (type doorvoering) onder een kop; binnen een groep blijft de volgorde van de lijst */
+  var byGroup = {}, order = [];
+  rows.forEach(function(c){
+    var g = groupOf(c.code);
+    if(!byGroup[g]){ byGroup[g] = []; order.push(g); }
+    byGroup[g].push(c);
+  });
+  order.sort(function(a, b){ return groupRank(a) - groupRank(b); });   /* stabiel: onbekende groepen blijven in lijstvolgorde */
+  $("#pickList").innerHTML = order.map(function(g){
+    return '<div class="grp" role="heading" aria-level="3">' + esc(groupTitle(g)) + ' <span class="grpn">' + byGroup[g].length + "</span></div>" +
+      byGroup[g].map(function(c){
+        return '<button type="button" class="opt' + (c.code === cur ? " on" : "") + '" data-code="' + esc(c.code) + '"><span class="code">' + esc(c.code) + "</span><span>" + esc(c.label) + "</span></button>";
+      }).join("");
+  }).join("");
 }
 
 /* opslaan */
@@ -1072,7 +1118,7 @@ function openCodes(){
   if(stack.indexOf("codes") >= 0) return;
   $("#codesTa").value = codesToText(codes);
   $("#codesCount").textContent = codes.length + " items";
-  $("#codesVersion").textContent = "Versie van de lijst: " + codesVersionLabel();
+  $("#codesVersion").textContent = codesVersionNote();
   $("#btnWipe").textContent = "Alle punten wissen";
   $("#cfgUrl").value = cfg ? cfg.url : "";
   $("#cfgKey").value = "";
@@ -1307,6 +1353,8 @@ function bind(){
     var parsed = parseCodes($("#codesTa").value);
     if(!parsed.length){ toast("De lijst mag niet leeg zijn."); return; }
     codes = parsed;
+    codesBase = CODES_VERSION;
+    await Store.setMeta("codes_base", CODES_VERSION);
     await Store.setMeta("codes_v2", codes);
     await Store.setMeta("codesDirty", true);
     codesDirty = true;
@@ -1319,8 +1367,7 @@ function bind(){
     var list = parseCodes(DEFAULT_TEXT);
     $("#codesTa").value = codesToText(list);
     $("#codesCount").textContent = list.length + " items";
-    $("#codesVersion").textContent = "Versie van de lijst: " + CODES_VERSION + " (standaard)";
-    toast("Standaardlijst ingevuld. Tik op ‘Codelijst opslaan’ om te bewaren.");
+    $("#codesVersion").textContent = "Versie van de lijst: " + CODES_VERSION + " (standaard)";    toast("Standaardlijst ingevuld. Tik op ‘Codelijst opslaan’ om te bewaren.");
   });
   $("#btnWipe").addEventListener("click", function(){
     var open = pendingRecords();
@@ -1347,10 +1394,18 @@ async function init(){
   var saved = await Store.getMeta("codes_v2");
   /* Een zelf opgeslagen lijst (Beheer) blijft altijd staan. Anders geldt de standaardlijst uit deze versie, en bij een
      nieuwe standaardlijst wordt ze opnieuw naar het tabblad Codes in de Sheet gestuurd. */
-  codes = (Array.isArray(saved) && saved.length) ? saved : parseCodes(DEFAULT_TEXT);
+  var hasSaved = Array.isArray(saved) && saved.length > 0;
+  if(hasSaved && KNOWN_DEFAULT_HASHES.indexOf(hashText(codesToText(saved))) >= 0){
+    /* een ongewijzigde oudere standaardlijst: vervangen door de nieuwe */
+    hasSaved = false;
+    await Store.setMeta("codes_v2", null);
+    await Store.setMeta("codesDirty", true);
+  }
+  codes = hasSaved ? saved : parseCodes(DEFAULT_TEXT);
+  codesBase = (await Store.getMeta("codes_base")) || 1;
   if((await Store.getMeta("codes_default_ver")) !== CODES_VERSION){
     await Store.setMeta("codes_default_ver", CODES_VERSION);
-    if(!(Array.isArray(saved) && saved.length)) await Store.setMeta("codesDirty", true);
+    if(!hasSaved) await Store.setMeta("codesDirty", true);
   }
   cfg = (await Store.getMeta("config")) || null;
   await load();

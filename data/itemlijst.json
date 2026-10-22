@@ -3,12 +3,13 @@
   "versie": 2,
   "datum": "2026-10-22",
   "bron": "Aangeleverd door de klant (schermafbeelding van de Excel); teksten overgenomen zoals getoond, zonder correcties.",
-  "groepenVolgorde": [
-    "B",
-    "K",
-    "G",
-    "L",
-    "A"
+  "vraag": "Om welke type van doorvoering gaat het hier? Een B(uis), een K(abel), een (kabel)G(oot) of een L(uchtkanaal)? Indien geen van deze, of een mengeling dat is het een A(ndere) doorvoering",
+  "groepen": [
+    { "letter": "B", "naam": "Buis" },
+    { "letter": "K", "naam": "Kabel" },
+    { "letter": "G", "naam": "Kabelgoot" },
+    { "letter": "L", "naam": "Luchtkanaal" },
+    { "letter": "A", "naam": "Andere" }
   ],
   "items": [
     {
