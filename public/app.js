@@ -1172,7 +1172,12 @@ function bindProjects(){
    en volgt een gewijzigde sleutel of een nieuw adres. */
 async function applyBuiltInConfig(){
   var url = window.INSPECT_SCRIPT_URL, key = window.INSPECT_SCRIPT_KEY;
-  if(!builtInConfig()) return;
+  if(!url) return;
+  /* Zonder ingebouwde sleutel (bv. localhost) wordt enkel een oud Google-adres vervangen; de opgeslagen sleutel blijft. */
+  if(!key){
+    if(!cfg || cfg.url === url || !/^https:\/\/script\.google\.com\//.test(cfg.url)) return;
+    key = cfg.key;
+  }
   if(cfg && cfg.url === url && cfg.key === key) return;
   cfg = {url: url, key: key};
   await Store.setMeta("config", cfg);

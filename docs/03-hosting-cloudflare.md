@@ -47,6 +47,7 @@ Werkwijze: ontwikkelen en testen op `dev`, daarna `dev` mergen naar `prd`.
 Het webadres van het Apps Script staat per omgeving in [../public/env.js](../public/env.js). De geheime sleutel komt uit een **build-secret** met de naam `GOOGLE_APPS_SCRIPT_SECRET_KEY` (Settings > Build > Variables and secrets, apart voor de dev- en de prd-omgeving). `npm run build` zet ze in `public/config.js`, waarna de app de verbinding zelf instelt en niets meer hoeft in te typen.
 
 - `config.js` in de repo blijft leeg. Commit nooit een ingevulde sleutel.
+- **Lokaal** (`npm run dev`, daarna http://localhost:8080): maak een bestand `.env.local` met de regel `GOOGLE_APPS_SCRIPT_SECRET_KEY=jouw-sleutel`. Het staat in `.gitignore` en de lokale server levert de sleutel zoals de build dat op Cloudflare doet.
 - De sleutel staat dan in een bestand dat de browser downloadt. Houd daarom **Cloudflare Access** aan voor dev én prd.
 - Wijzig je de sleutel (ook in de script-eigenschap `SECRET_KEY`), bouw dan opnieuw. Toestellen nemen de nieuwe sleutel over bij de volgende start.
 
