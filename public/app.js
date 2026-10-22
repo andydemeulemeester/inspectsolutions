@@ -1,93 +1,94 @@
 (function(){
 "use strict";
 
-var VERSION = "1.2.0"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.2.1"; /* houd gelijk met VERSION in sw.js */
+var CODES_VERSION = 2;   /* verhoog als de standaardcodelijst verandert (zie scripts/update-codes.js) */
 
 var $ = function(s){ return document.querySelector(s); };
 var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
 
 /* ---------- Standaard codelijst (80 items van de klant, ongewijzigd) ---------- */
 var DEFAULT_TEXT = [
-  "OP01 | opening vergroten en typeoplossing TV254/293  uitvoeren",
-  "DI01 | Nazicht gesteldheid muur - lijkt ok te zijn",
-  "PR01 | Opening vergroten rond goot en productoplossing uitvoeren",
-  "LV01 | Lineaire voeg uit te voeren",
-  "OP02 | opening vergroten  kabels/ buizen uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren",
-  "DE01 | nieuwe deur te plaatsen - EI30 schilderafwerking + magneet",
-  "DE02 | brandwerend glas ok",
-  "DI02 | algemeen zicht",
-  "OP03 | typeoplossing TV254/293 uitvoeren",
-  "DE03 | Herstellen vasthoudmagneet",
-  "PR02 | Schuim verwijderen , opening vergroten rond item  en productoplossing uitvoeren",
-  "OP04 | typeoplossing TV254/293 uitvoeren en nadien mantelbuis opstoppen met rotswol",
-  "OP05 | Schuim verwijderen, opening vergroten en typeoplossing TV254/293 uitvoeren",
-  "PR03 | mortel verwijderen , opening vergroten rond kabelbundel en productoplossing uitvoeren",
-  "LV02 | Lineaire voeg uit te voeren-oude weg productoplossing",
-  "OP06 | 1 buis opening vergroten en typeoplossing TV254/293  uitvoeren",
-  "PR04 | Schuim verwijderen , opening vergroten rond buis en productoplossing uitvoeren",
-  "PL01 | plafond herstellen",
-  "OP07 | opening vergroten en uitvoeren met typeoplossing TV 254/293 en rond de buis omkasting maken met flexibele productoplossing",
-  "OP08 | typeoplossing TV254/293 uitvoeren gat te dichten",
-  "PL02 | plafond herstellen + kabels TV + buizen productoplossing",
-  "OP09 | isolatie openknippen en achterliggend op de muur typeoplossing uitvoeren TV254/293",
-  "OP10 | opening vergroten  kabels/buizen uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren",
-  "OP11 | Schuim verwijderen, opening vergroten en typeoplossing TV254/293 type C uitvoeren",
-  "PR05 | mortel verwijderen , opening vergroten rond kabelbundel /buis en productoplossing uitvoeren",
-  "OP12 | typeoplossing TV254/293 uitvoeren en ook mantelbuis opstoppen met rotswol",
-  "OP13 | opening vergroten en typeoplossing TV254/293 uitvoeren",
-  "OP14 | typeoplossing TV254/293 uitvoeren blind gat te dichten",
-  "DE04 | nieuwe zwaai deur te plaatsen - EI30 schilderafwerking + magneet",
-  "PR06 | buizen en kabels doorheen nieuw bovenpaneel productoplossing",
-  "OP15 | Schuim verwijderen , kabels uit elkaar en uitvoeren typeoplossing TV254/293",
-  "LV03 | diversen kabels buizen lin voeg - productopl",
-  "LV04 | opmetsen wand +afdichten vlgs TV + lin voeg",
-  "DE05 | nieuwe  deur te plaatsen - EI30 schilderafwerking",
-  "PR07 | Schuim wegnemen opstop volgens productoplossing  uitlijning is Niet ok+nieuwe klep",
-  "PA01 | afdichting via panelen te maken productopl",
-  "OP16 | kabels uit elkaar en uitvoeren typeoplossing TV254/293",
-  "OP17 | Opening vergroten en typeoplossing TV254/293 uitvoeren",
-  "PA02 | dichten opening met panelen",
-  "OP18 | buizen en kabels vlgs TV254/293",
-  "PA03 | luik openen en afdichten productopl panelen",
-  "WA01 | Nieuwe afscherming E60 rolluik/gordijn douches en inkom",
-  "WA02 | Achterliggende wand EI30 te plaatsen",
-  "WA03 | Wand EI30 te plaatsen",
-  "OP19 | bovenconstructie typeopl TV 254/293 + nieuw plafond",
-  "DE06 | nieuwe deur te plaatsen - EI30 schilderafwerking + magneet + doorvoeren bovenpaneel",
-  "OP20 | kabels uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren",
-  "DE07 | nieuwe deur te plaatsen - EI30 schilderafwerking",
-  "PR08 | Evt Schuim wegnemen + opstop volgens productoplossing",
-  "OP21 | kabels uit elkaar en uitvoeren typeoplossing TV254/293+ productoplossingen",
-  "LV05 | lin voeg en paneel",
-  "DE08 | nieuwe deur te plaatsen - EI30 schilderafwerking + tussendeurdorpel",
-  "OP22 | typeoplossing TV254/293 uitvoeren",
-  "PR09 | productoplossing voor kabels en buis",
-  "PR10 | Schuim verwijderen, opening vergroten enproductoplossing",
-  "PA04 | Nieuw brandwerend luik",
-  "PA05 | productoplossing panelen",
-  "DE09 | Brandwerende schuifdeur E30-schilderafwerking",
-  "WA04 | nieuwe wand EI30 achter bestaand raam",
-  "PR11 | opening vergroten rond kabelbundel en productoplossing uitvoeren",
-  "WA05 | nieuwe wand EI30 achter bestaand raam - 3 stuks",
-  "WA06 | nieuwe wand EI30 achter bestaand raam - achter bekleding",
-  "PL03 | plafond  - 2 lagen gips erop",
-  "LV06 | productoplossing lin voeg",
-  "PR12 | productoplossing voor kabels en buis - kabelgoot",
-  "PA06 | herstel achter wand via luik",
-  "DI03 | meting",
-  "PR13 | Evt Schuim wegnemen + opstop volgens productoplossing   + uitlijning controleren",
-  "OP23 | Opening vergroten en typeoplossing TV254/293",
-  "DE10 | nieuwe zwaaideur te plaatsen - EI30 schilderafwerking",
-  "PA07 | nieuwe doorgeefluik te plaatsen - EI30 schilderafwerking  + brandwerende onderbouw",
-  "WA07 | nieuwe wand EI 30",
-  "PR14 | opstop volgens productoplossing",
-  "LV07 | lin voeg",
-  "PA08 | paneel bovenaan brandwerend maken",
-  "DI04 | detail",
-  "DE11 | Deur comform = ok",
-  "DE12 | nieuw brandwerend raam",
-  "DE13 | rooster te plaatsen",
-  "DE14 | brandwerend rooster"
+  "B-1 | opening vergroten kabels/ buizen uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren",
+  "B-2 | productoplossing voor kabels en buis",
+  "B-3 | buizen en kabels vlgs TV254/293",
+  "B-4 | diversen kabels buizen lin voeg - productopl",
+  "B-5 | mortel verwijderen, opening vergroten rond kabelbundel /buis en productoplossing uitvoeren",
+  "B-6 | 1 buis opening vergroten en typeoplossing TV254/293 uitvoeren",
+  "B-7 | opening vergroten, kabels/buizen uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren",
+  "B-8 | opening vergroten en uitvoeren met typeoplossing TV 254/293 en rond de buis omkasting maken met flexibele productoplossing",
+  "B-9 | plafond herstellen + kabels TV + buizen productoplossing",
+  "B-10 | buizen en kabels doorheen nieuw bovenpaneel productoplossing",
+  "B-11 | productoplossing voor kabels en buis - kabelgoot",
+  "B-12 | Schuim verwijderen , opening vergroten rond buis en productoplossing uitvoeren",
+  "B-13 | typeoplossing TV254/293 uitvoeren en nadien mantelbuis opstoppen met rotswol",
+  "B-14 | typeoplossing TV254/293 uitvoeren en ook mantelbuis opstoppen met rotswol",
+  "K-15 | kabels uit elkaar en uitvoeren typeoplossing TV254/293",
+  "K-16 | kabels uit elkaar en uitvoeren typeoplossing TV254/293+ productoplossingen",
+  "K-17 | opening vergroten rond kabelbundel and productoplossing uitvoeren",
+  "K-18 | kabels uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren",
+  "K-19 | mortel verwijderen , opening vergroten rond kabelbundel en productoplossing uitvoeren",
+  "K-20 | Schuim verwijderen, kabels uit elkaar en uitvoeren typeoplossing TV254/293",
+  "G-21 | Opening vergroten rond goot en productoplossing uitvoeren",
+  "A-22 | opening vergroten en typeoplossing TV254/293 uitvoeren",
+  "A-23 | Achterliggende wand EI30 te plaatsen",
+  "A-24 | afdichting via panelen te maken productopl.",
+  "A-25 | algemeen zicht",
+  "A-26 | bovenconstructie type opl TV 254/293 + nieuw plafond",
+  "A-27 | brandwerend glas ok",
+  "A-28 | brandwerend rooster",
+  "A-29 | Brandwerende schuifdeur EI30-schilderafwerking",
+  "A-30 | detail",
+  "A-31 | Deur conform = ok",
+  "A-32 | dichten opening met panelen",
+  "A-33 | Evt Schuim wegnemen + opstop volgens productoplossing",
+  "A-34 | Evt Schuim wegnemen + opstop volgens productoplossing + uitlijning controleren",
+  "A-35 | herstel achter wand via luik",
+  "A-36 | Herstellen vasthoudmagneet",
+  "A-37 | isolatie openknippen en achterliggend op the muur typeoplossing uitvoeren TV254/293",
+  "A-38 | lin voeg",
+  "A-39 | lin voeg en paneel",
+  "A-40 | Lineaire voeg uit te voeren",
+  "A-41 | Lineaire voeg uit te voeren-oude weg productoplossing",
+  "A-42 | luik openen en afdichten productopl panelen",
+  "A-43 | meting",
+  "A-44 | Nazicht gesteldheid muur - lijkt ok te zijn",
+  "A-45 | Nieuw brandwerend luik",
+  "A-46 | nieuw brandwerend raam",
+  "A-47 | nieuwe deur te plaatsen - EI30 schilderafwerking",
+  "A-48 | Nieuwe afscherming E60 rolluik/gordijn douches en inkom",
+  "A-49 | nieuwe deur te plaatsen - EI30 schilderafwerking",
+  "A-50 | nieuwe deur te plaatsen - EI30 schilderafwerking + magneet",
+  "A-51 | nieuwe deur te plaatsen - EI30 schilderafwerking + magneet + doorvoeren bovenpaneel",
+  "A-52 | nieuwe deur te plaatsen - EI30 schilderafwerking + tussendeurdorpel",
+  "A-53 | nieuwe doorgeefluik te plaatsen - EI30 schilderafwerking + brandwerende onderbouw",
+  "A-54 | nieuwe wand EI 30",
+  "A-55 | nieuwe wand EI30 achter bestaand raam",
+  "A-56 | nieuwe wand EI30 achter bestaand raam - 3 stuks",
+  "A-57 | nieuwe wand EI30 achter bestaand raam - achter bekleding",
+  "A-58 | nieuwe zwaai deur te plaatsen - EI30 schilderafwerking + magneet",
+  "A-59 | nieuwe zwaaideur te plaatsen EI30 schilderafwerking",
+  "A-60 | Opening vergroten en typeoplossing TV254/293",
+  "A-61 | opening vergroten en typeoplossing TV254/293 uitvoeren",
+  "A-62 | Opening vergroten en typeoplossing TV254/293 uitvoeren",
+  "A-63 | opmetsen wand +afdichten vlgs TV + lin voeg",
+  "A-64 | opstop volgens productoplossing",
+  "A-65 | paneel bovenaan brandwerend maken",
+  "A-66 | plafond 2 lagen gips erop",
+  "A-67 | plafond herstellen",
+  "A-68 | productoplossing lin voeg",
+  "A-69 | productoplossing panelen",
+  "A-70 | rooster te plaatsen",
+  "A-71 | Schuim verwijderen, opening vergroten rond item en productoplossing uitvoeren",
+  "A-72 | Schuim verwijderen, opening vergroten en typeoplossing TV254/293 type C uitvoeren",
+  "A-73 | Schuim verwijderen, opening vergroten en typeoplossing TV254/293 uitvoeren",
+  "A-74 | Schuim verwijderen, opening vergroten enproductoplossing",
+  "A-75 | Schuim wegnemen opstop volgens productoplossing uitlijning is Niet ok+nieuwe klep",
+  "A-76 | typeoplossing TV254/293 uitvoeren",
+  "A-77 | typeoplossing TV254/293 uitvoeren",
+  "A-78 | typeoplossing TV254/293 uitvoeren blind gat te dichten",
+  "A-79 | typeoplossing TV254/293 uitvoeren gatte dichten",
+  "A-80 | Wand EI30 te plaatsen"
 ].join("\n");
 
 function parseCodes(text){
@@ -105,6 +106,11 @@ function parseCodes(text){
     out.push({code: code, label: label});
   });
   return out;
+}
+/* Versie van de lijst: "2" voor de standaardlijst, "2 (aangepast)" als ze in Beheer gewijzigd is */
+function codesVersionLabel(){
+  var isDefault = codesToText(codes) === codesToText(parseCodes(DEFAULT_TEXT));
+  return String(CODES_VERSION) + (isDefault ? "" : " (aangepast)");
 }
 function codesToText(list){
   return list.map(function(c){ return c.code + " | " + c.label; }).join("\n");
@@ -857,7 +863,7 @@ async function syncPass(){
   try{
     if(codesDirty){
       await unit(async function(){
-        await post({action: "codes", codes: codes});
+        await post({action: "codes", codes: codes, version: codesVersionLabel()});
         await Store.setMeta("codesDirty", false);
         codesDirty = false;
       });
@@ -1066,6 +1072,7 @@ function openCodes(){
   if(stack.indexOf("codes") >= 0) return;
   $("#codesTa").value = codesToText(codes);
   $("#codesCount").textContent = codes.length + " items";
+  $("#codesVersion").textContent = "Versie van de lijst: " + codesVersionLabel();
   $("#btnWipe").textContent = "Alle punten wissen";
   $("#cfgUrl").value = cfg ? cfg.url : "";
   $("#cfgKey").value = "";
@@ -1312,6 +1319,7 @@ function bind(){
     var list = parseCodes(DEFAULT_TEXT);
     $("#codesTa").value = codesToText(list);
     $("#codesCount").textContent = list.length + " items";
+    $("#codesVersion").textContent = "Versie van de lijst: " + CODES_VERSION + " (standaard)";
     toast("Standaardlijst ingevuld. Tik op ‘Codelijst opslaan’ om te bewaren.");
   });
   $("#btnWipe").addEventListener("click", function(){
@@ -1337,7 +1345,13 @@ async function init(){
   var ok = await Store.open();
   $("#memwarn").hidden = ok;
   var saved = await Store.getMeta("codes_v2");
+  /* Een zelf opgeslagen lijst (Beheer) blijft altijd staan. Anders geldt de standaardlijst uit deze versie, en bij een
+     nieuwe standaardlijst wordt ze opnieuw naar het tabblad Codes in de Sheet gestuurd. */
   codes = (Array.isArray(saved) && saved.length) ? saved : parseCodes(DEFAULT_TEXT);
+  if((await Store.getMeta("codes_default_ver")) !== CODES_VERSION){
+    await Store.setMeta("codes_default_ver", CODES_VERSION);
+    if(!(Array.isArray(saved) && saved.length)) await Store.setMeta("codesDirty", true);
+  }
   cfg = (await Store.getMeta("config")) || null;
   await load();
   await migrateProjects();

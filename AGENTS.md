@@ -20,7 +20,7 @@ Dezelfde code draait op beide omgevingen. `public/env.js` kiest op basis van het
 - Gebruik voor `dev` een aparte test-Sheet, Drive-map en Apps Script-deployment. Zet geen echte gegevens op `dev`.
 - Zet de Apps Script-URL en de geheime sleutel **nooit** in de code of de repo. Ze worden op het toestel ingevoerd in Beheer.
 - Wijzig het IndexedDB-schema alleen additief (nieuwe stores of velden). Een update mag nog niet-gesynchroniseerde data nooit wissen.
-- Houd de tekst van de 80 items uit de klantlijst ongewijzigd (zie het projectbrief, punt 10).
+- De itemlijst van de klant staat in `data/itemlijst.json` (met een `versie`). Houd de teksten ongewijzigd, ook typfouten. Na een wijziging: verhoog `versie`, voer `npm run codes` uit (zet de lijst en `CODES_VERSION` in `public/app.js`) en verhoog `VERSION` in `public/sw.js` en `public/app.js`. Een lijst die iemand zelf in Beheer opsloeg blijft op dat toestel staan; ze kan daar met “Standaardlijst herstellen” vervangen worden.
 - Geen externe CDN-afhankelijkheden: alles moet offline in de cache kunnen. De CSP in `public/_headers` staat enkel eigen bestanden en `script.google.com` toe.
 - Zet geen `routes` of domeinen in `wrangler.jsonc`; die worden in het Cloudflare-dashboard beheerd.
 - Na een wijziging aan `apps-script/Code.gs`: opnieuw implementeren (nieuwe versie) in Apps Script. De URL blijft gelijk.

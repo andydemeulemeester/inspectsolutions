@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Offline-first PWA voor een controlerondgang",
+  "scripts": {
+    "codes": "node scripts/update-codes.js"
+  },
   "devDependencies": {
     "wrangler": "^4.135.0"
   }

@@ -1,0 +1,495 @@
+{
+  "naam": "Itemlijst InspectSolutions",
+  "versie": 2,
+  "datum": "2026-10-22",
+  "bron": "Aangeleverd door de klant (schermafbeelding van de Excel); teksten overgenomen zoals getoond, zonder correcties.",
+  "groepenVolgorde": [
+    "B",
+    "K",
+    "G",
+    "L",
+    "A"
+  ],
+  "items": [
+    {
+      "nr": 1,
+      "code": "B-1",
+      "group": "B",
+      "label": "opening vergroten kabels/ buizen uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 2,
+      "code": "B-2",
+      "group": "B",
+      "label": "productoplossing voor kabels en buis"
+    },
+    {
+      "nr": 3,
+      "code": "B-3",
+      "group": "B",
+      "label": "buizen en kabels vlgs TV254/293"
+    },
+    {
+      "nr": 4,
+      "code": "B-4",
+      "group": "B",
+      "label": "diversen kabels buizen lin voeg - productopl"
+    },
+    {
+      "nr": 5,
+      "code": "B-5",
+      "group": "B",
+      "label": "mortel verwijderen, opening vergroten rond kabelbundel /buis en productoplossing uitvoeren"
+    },
+    {
+      "nr": 6,
+      "code": "B-6",
+      "group": "B",
+      "label": "1 buis opening vergroten en typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 7,
+      "code": "B-7",
+      "group": "B",
+      "label": "opening vergroten, kabels/buizen uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 8,
+      "code": "B-8",
+      "group": "B",
+      "label": "opening vergroten en uitvoeren met typeoplossing TV 254/293 en rond de buis omkasting maken met flexibele productoplossing"
+    },
+    {
+      "nr": 9,
+      "code": "B-9",
+      "group": "B",
+      "label": "plafond herstellen + kabels TV + buizen productoplossing"
+    },
+    {
+      "nr": 10,
+      "code": "B-10",
+      "group": "B",
+      "label": "buizen en kabels doorheen nieuw bovenpaneel productoplossing"
+    },
+    {
+      "nr": 11,
+      "code": "B-11",
+      "group": "B",
+      "label": "productoplossing voor kabels en buis - kabelgoot"
+    },
+    {
+      "nr": 12,
+      "code": "B-12",
+      "group": "B",
+      "label": "Schuim verwijderen , opening vergroten rond buis en productoplossing uitvoeren"
+    },
+    {
+      "nr": 13,
+      "code": "B-13",
+      "group": "B",
+      "label": "typeoplossing TV254/293 uitvoeren en nadien mantelbuis opstoppen met rotswol"
+    },
+    {
+      "nr": 14,
+      "code": "B-14",
+      "group": "B",
+      "label": "typeoplossing TV254/293 uitvoeren en ook mantelbuis opstoppen met rotswol"
+    },
+    {
+      "nr": 15,
+      "code": "K-15",
+      "group": "K",
+      "label": "kabels uit elkaar en uitvoeren typeoplossing TV254/293"
+    },
+    {
+      "nr": 16,
+      "code": "K-16",
+      "group": "K",
+      "label": "kabels uit elkaar en uitvoeren typeoplossing TV254/293+ productoplossingen"
+    },
+    {
+      "nr": 17,
+      "code": "K-17",
+      "group": "K",
+      "label": "opening vergroten rond kabelbundel and productoplossing uitvoeren"
+    },
+    {
+      "nr": 18,
+      "code": "K-18",
+      "group": "K",
+      "label": "kabels uit elkaar zetten nadien typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 19,
+      "code": "K-19",
+      "group": "K",
+      "label": "mortel verwijderen , opening vergroten rond kabelbundel en productoplossing uitvoeren"
+    },
+    {
+      "nr": 20,
+      "code": "K-20",
+      "group": "K",
+      "label": "Schuim verwijderen, kabels uit elkaar en uitvoeren typeoplossing TV254/293"
+    },
+    {
+      "nr": 21,
+      "code": "G-21",
+      "group": "G",
+      "label": "Opening vergroten rond goot en productoplossing uitvoeren"
+    },
+    {
+      "nr": 22,
+      "code": "A-22",
+      "group": "A",
+      "label": "opening vergroten en typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 23,
+      "code": "A-23",
+      "group": "A",
+      "label": "Achterliggende wand EI30 te plaatsen"
+    },
+    {
+      "nr": 24,
+      "code": "A-24",
+      "group": "A",
+      "label": "afdichting via panelen te maken productopl."
+    },
+    {
+      "nr": 25,
+      "code": "A-25",
+      "group": "A",
+      "label": "algemeen zicht"
+    },
+    {
+      "nr": 26,
+      "code": "A-26",
+      "group": "A",
+      "label": "bovenconstructie type opl TV 254/293 + nieuw plafond"
+    },
+    {
+      "nr": 27,
+      "code": "A-27",
+      "group": "A",
+      "label": "brandwerend glas ok"
+    },
+    {
+      "nr": 28,
+      "code": "A-28",
+      "group": "A",
+      "label": "brandwerend rooster"
+    },
+    {
+      "nr": 29,
+      "code": "A-29",
+      "group": "A",
+      "label": "Brandwerende schuifdeur EI30-schilderafwerking"
+    },
+    {
+      "nr": 30,
+      "code": "A-30",
+      "group": "A",
+      "label": "detail"
+    },
+    {
+      "nr": 31,
+      "code": "A-31",
+      "group": "A",
+      "label": "Deur conform = ok"
+    },
+    {
+      "nr": 32,
+      "code": "A-32",
+      "group": "A",
+      "label": "dichten opening met panelen"
+    },
+    {
+      "nr": 33,
+      "code": "A-33",
+      "group": "A",
+      "label": "Evt Schuim wegnemen + opstop volgens productoplossing"
+    },
+    {
+      "nr": 34,
+      "code": "A-34",
+      "group": "A",
+      "label": "Evt Schuim wegnemen + opstop volgens productoplossing + uitlijning controleren"
+    },
+    {
+      "nr": 35,
+      "code": "A-35",
+      "group": "A",
+      "label": "herstel achter wand via luik"
+    },
+    {
+      "nr": 36,
+      "code": "A-36",
+      "group": "A",
+      "label": "Herstellen vasthoudmagneet"
+    },
+    {
+      "nr": 37,
+      "code": "A-37",
+      "group": "A",
+      "label": "isolatie openknippen en achterliggend op the muur typeoplossing uitvoeren TV254/293"
+    },
+    {
+      "nr": 38,
+      "code": "A-38",
+      "group": "A",
+      "label": "lin voeg"
+    },
+    {
+      "nr": 39,
+      "code": "A-39",
+      "group": "A",
+      "label": "lin voeg en paneel"
+    },
+    {
+      "nr": 40,
+      "code": "A-40",
+      "group": "A",
+      "label": "Lineaire voeg uit te voeren"
+    },
+    {
+      "nr": 41,
+      "code": "A-41",
+      "group": "A",
+      "label": "Lineaire voeg uit te voeren-oude weg productoplossing"
+    },
+    {
+      "nr": 42,
+      "code": "A-42",
+      "group": "A",
+      "label": "luik openen en afdichten productopl panelen"
+    },
+    {
+      "nr": 43,
+      "code": "A-43",
+      "group": "A",
+      "label": "meting"
+    },
+    {
+      "nr": 44,
+      "code": "A-44",
+      "group": "A",
+      "label": "Nazicht gesteldheid muur - lijkt ok te zijn"
+    },
+    {
+      "nr": 45,
+      "code": "A-45",
+      "group": "A",
+      "label": "Nieuw brandwerend luik"
+    },
+    {
+      "nr": 46,
+      "code": "A-46",
+      "group": "A",
+      "label": "nieuw brandwerend raam"
+    },
+    {
+      "nr": 47,
+      "code": "A-47",
+      "group": "A",
+      "label": "nieuwe deur te plaatsen - EI30 schilderafwerking"
+    },
+    {
+      "nr": 48,
+      "code": "A-48",
+      "group": "A",
+      "label": "Nieuwe afscherming E60 rolluik/gordijn douches en inkom"
+    },
+    {
+      "nr": 49,
+      "code": "A-49",
+      "group": "A",
+      "label": "nieuwe deur te plaatsen - EI30 schilderafwerking"
+    },
+    {
+      "nr": 50,
+      "code": "A-50",
+      "group": "A",
+      "label": "nieuwe deur te plaatsen - EI30 schilderafwerking + magneet"
+    },
+    {
+      "nr": 51,
+      "code": "A-51",
+      "group": "A",
+      "label": "nieuwe deur te plaatsen - EI30 schilderafwerking + magneet + doorvoeren bovenpaneel"
+    },
+    {
+      "nr": 52,
+      "code": "A-52",
+      "group": "A",
+      "label": "nieuwe deur te plaatsen - EI30 schilderafwerking + tussendeurdorpel"
+    },
+    {
+      "nr": 53,
+      "code": "A-53",
+      "group": "A",
+      "label": "nieuwe doorgeefluik te plaatsen - EI30 schilderafwerking + brandwerende onderbouw"
+    },
+    {
+      "nr": 54,
+      "code": "A-54",
+      "group": "A",
+      "label": "nieuwe wand EI 30"
+    },
+    {
+      "nr": 55,
+      "code": "A-55",
+      "group": "A",
+      "label": "nieuwe wand EI30 achter bestaand raam"
+    },
+    {
+      "nr": 56,
+      "code": "A-56",
+      "group": "A",
+      "label": "nieuwe wand EI30 achter bestaand raam - 3 stuks"
+    },
+    {
+      "nr": 57,
+      "code": "A-57",
+      "group": "A",
+      "label": "nieuwe wand EI30 achter bestaand raam - achter bekleding"
+    },
+    {
+      "nr": 58,
+      "code": "A-58",
+      "group": "A",
+      "label": "nieuwe zwaai deur te plaatsen - EI30 schilderafwerking + magneet"
+    },
+    {
+      "nr": 59,
+      "code": "A-59",
+      "group": "A",
+      "label": "nieuwe zwaaideur te plaatsen EI30 schilderafwerking"
+    },
+    {
+      "nr": 60,
+      "code": "A-60",
+      "group": "A",
+      "label": "Opening vergroten en typeoplossing TV254/293"
+    },
+    {
+      "nr": 61,
+      "code": "A-61",
+      "group": "A",
+      "label": "opening vergroten en typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 62,
+      "code": "A-62",
+      "group": "A",
+      "label": "Opening vergroten en typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 63,
+      "code": "A-63",
+      "group": "A",
+      "label": "opmetsen wand +afdichten vlgs TV + lin voeg"
+    },
+    {
+      "nr": 64,
+      "code": "A-64",
+      "group": "A",
+      "label": "opstop volgens productoplossing"
+    },
+    {
+      "nr": 65,
+      "code": "A-65",
+      "group": "A",
+      "label": "paneel bovenaan brandwerend maken"
+    },
+    {
+      "nr": 66,
+      "code": "A-66",
+      "group": "A",
+      "label": "plafond 2 lagen gips erop"
+    },
+    {
+      "nr": 67,
+      "code": "A-67",
+      "group": "A",
+      "label": "plafond herstellen"
+    },
+    {
+      "nr": 68,
+      "code": "A-68",
+      "group": "A",
+      "label": "productoplossing lin voeg"
+    },
+    {
+      "nr": 69,
+      "code": "A-69",
+      "group": "A",
+      "label": "productoplossing panelen"
+    },
+    {
+      "nr": 70,
+      "code": "A-70",
+      "group": "A",
+      "label": "rooster te plaatsen"
+    },
+    {
+      "nr": 71,
+      "code": "A-71",
+      "group": "A",
+      "label": "Schuim verwijderen, opening vergroten rond item en productoplossing uitvoeren"
+    },
+    {
+      "nr": 72,
+      "code": "A-72",
+      "group": "A",
+      "label": "Schuim verwijderen, opening vergroten en typeoplossing TV254/293 type C uitvoeren"
+    },
+    {
+      "nr": 73,
+      "code": "A-73",
+      "group": "A",
+      "label": "Schuim verwijderen, opening vergroten en typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 74,
+      "code": "A-74",
+      "group": "A",
+      "label": "Schuim verwijderen, opening vergroten enproductoplossing"
+    },
+    {
+      "nr": 75,
+      "code": "A-75",
+      "group": "A",
+      "label": "Schuim wegnemen opstop volgens productoplossing uitlijning is Niet ok+nieuwe klep"
+    },
+    {
+      "nr": 76,
+      "code": "A-76",
+      "group": "A",
+      "label": "typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 77,
+      "code": "A-77",
+      "group": "A",
+      "label": "typeoplossing TV254/293 uitvoeren"
+    },
+    {
+      "nr": 78,
+      "code": "A-78",
+      "group": "A",
+      "label": "typeoplossing TV254/293 uitvoeren blind gat te dichten"
+    },
+    {
+      "nr": 79,
+      "code": "A-79",
+      "group": "A",
+      "label": "typeoplossing TV254/293 uitvoeren gatte dichten"
+    },
+    {
+      "nr": 80,
+      "code": "A-80",
+      "group": "A",
+      "label": "Wand EI30 te plaatsen"
+    }
+  ]
+}

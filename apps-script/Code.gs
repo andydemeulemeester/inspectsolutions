@@ -60,7 +60,7 @@ function doPost(e) {
       case 'upsert':  return json_(upsert_(req));
       case 'photo':   return json_(photo_(req));
       case 'delete':  return json_(delete_(req));
-      case 'codes':   return json_(codes_(req.codes));
+      case 'codes':   return json_(codes_(req.codes, req.version));
       default:        return json_({ ok: false, error: 'Onbekende actie: ' + req.action });
     }
   } catch (err) {
@@ -268,11 +268,14 @@ function delete_(req) {
   return { ok: true, id: id };
 }
 
-function codes_(list) {
+function codes_(list, version) {
   var ss = SpreadsheetApp.getActive();
   var sh = ss.getSheetByName(CODES_SHEET_NAME) || ss.insertSheet(CODES_SHEET_NAME);
   sh.clear();
   sh.getRange(1, 1, 1, 2).setValues([['Code', 'Omschrijving']]).setFontWeight('bold');
+  // Versienummer van de lijst (bv. "2", of "2 (aangepast)" als ze in de app gewijzigd is)
+  sh.getRange(1, 4, 1, 2).setNumberFormat('@').setValues([['Versie', String(version || '')]]);
+  sh.getRange(1, 4).setFontWeight('bold');
   sh.setFrozenRows(1);
   if (list && list.length) {
     var vals = list.map(function (c) { return [String(c.code), String(c.label)]; });
