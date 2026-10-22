@@ -2,14 +2,16 @@
    De nieuwe versie wordt op de achtergrond binnengehaald en pas actief als de gebruiker
    op "Nu bijwerken" tikt of de app volledig sluit. Tot dan blijft de oude versie werken.
    Verhoog VERSION bij elke wijziging aan de bestanden (en in app.js). */
-var VERSION = "1.4.1";
-var CACHE = "inspect-shell-" + VERSION;
+var VERSION = "1.4.2";
+var CONFIG_STAMP = "";   /* door scripts/inject-config.js ingevuld tijdens de build */
+var CACHE = "inspect-shell-" + VERSION + CONFIG_STAMP;
 var SHELL = [
   "index.html",
   "style.css",
   "app.js",
   "editor.js",
   "env.js",
+  "config.js",
   "manifest.webmanifest",
   "manifest-dev.webmanifest",
   "icons/dev-icon-192.png",

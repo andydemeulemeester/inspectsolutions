@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.4.1"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.4.2"; /* houd gelijk met VERSION in sw.js */
 var CODES_VERSION = 2;   /* verhoog als de standaardcodelijst verandert (zie scripts/update-codes.js) */
 
 var $ = function(s){ return document.querySelector(s); };
@@ -1168,6 +1168,17 @@ function bindProjects(){
 }
 
 /* ---------- Beheer ---------- */
+/* Verbinding die tijdens de build is meegegeven (env.js + config.js). Ze vult een nieuw toestel vanzelf in
+   en volgt een gewijzigde sleutel of een nieuw adres. */
+async function applyBuiltInConfig(){
+  var url = window.INSPECT_SCRIPT_URL, key = window.INSPECT_SCRIPT_KEY;
+  if(!url || !key) return;
+  if(cfg && cfg.url === url && cfg.key === key) return;
+  cfg = {url: url, key: key};
+  await Store.setMeta("config", cfg);
+  await Store.setMeta("codesDirty", true);
+  codesDirty = true;
+}
 function openCodes(){
   if(stack.indexOf("codes") >= 0) return;
   $("#codesTa").value = codesToText(codes);
@@ -1497,6 +1508,7 @@ async function init(){
     if(!hasSaved) await Store.setMeta("codesDirty", true);
   }
   cfg = (await Store.getMeta("config")) || null;
+  await applyBuiltInConfig();
   await load();
   await migrateProjects();
   renderAll();

@@ -35,13 +35,20 @@ Werkwijze: ontwikkelen en testen op `dev`, daarna `dev` mergen naar `prd`.
 3. Instellingen (Worker > **Settings > Build**):
    - **Worker-naam:** `inspectsolutions` (moet overeenkomen met `name` in `wrangler.jsonc`)
    - **Git branch (productie):** `prd`
-   - **Build command:** leeg
+   - **Build command:** `npm run build` (schrijft de geheime sleutel uit het build-secret in `public/config.js`, zie punt 2b)
    - **Deploy command:** `npx wrangler deploy`
    - **Branch control:** *Builds for non-production branches* **aan**
    - **Non-production branch deploy command:** `npx wrangler preview`
 4. **Save and Deploy**. Elke push naar `prd` publiceert automatisch naar productie, elke push naar `dev` werkt de preview bij.
 
 > **Te controleren bij de eerste build:** of Workers Builds `npx wrangler preview` als deploycommando voor niet-productiebranches aanvaardt, en of de previewnaam de branchnaam `dev` wordt (zodat het adres `dev.inspect.gapsolutions.be` klopt). Lukt dat niet, gebruik dan de terugval in punt 7.
+
+## 2b. Sleutel van het Apps Script meegeven tijdens de build
+Het webadres van het Apps Script staat per omgeving in [../public/env.js](../public/env.js). De geheime sleutel komt uit een **build-secret** met de naam `GOOGLE_APPS_SCRIPT_SECRET_KEY` (Settings > Build > Variables and secrets, apart voor de dev- en de prd-omgeving). `npm run build` zet ze in `public/config.js`, waarna de app de verbinding zelf instelt en niets meer hoeft in te typen.
+
+- `config.js` in de repo blijft leeg. Commit nooit een ingevulde sleutel.
+- De sleutel staat dan in een bestand dat de browser downloadt. Houd daarom **Cloudflare Access** aan voor dev én prd.
+- Wijzig je de sleutel (ook in de script-eigenschap `SECRET_KEY`), bouw dan opnieuw. Toestellen nemen de nieuwe sleutel over bij de volgende start.
 
 ## 3. Eigen domein
 
