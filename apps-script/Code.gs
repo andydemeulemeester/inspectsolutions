@@ -13,9 +13,10 @@
  * Script-eigenschappen (Projectinstellingen > Script-eigenschappen):
  *   SECRET_KEY    verplicht   de geheime sleutel die ook in de app wordt ingevoerd
  *   FOLDER_ID     optioneel   id van de Drive-hoofdmap voor alle projecten (anders wordt er een aangemaakt)
+ *   OVERVIEW_ID   automatisch bij een los script (niet gebonden aan een Sheet): de zelf aangemaakte overzichts-Sheet
  */
 
-var VERSION = '1.3.1';
+var VERSION = '1.3.2';
 // Versie van het protocol tussen de app en dit script. De app weigert te synchroniseren als dit getal lager is dan wat
 // ze nodig heeft (REQUIRED_SCRIPT_API in public/app.js). Verhoog het hier én daar wanneer de app nieuwe acties of
 // gegevens stuurt die een ouder script niet begrijpt.
@@ -34,7 +35,7 @@ var PROJECT_COL_ID = 6;
 
 /** Eénmalig uitvoeren om toestemmingen te geven en het overzicht en de hoofdmap klaar te zetten. */
 function initialiseer() {
-  SpreadsheetApp.getActive().setSpreadsheetTimeZone(TZ);
+  overviewSs_().setSpreadsheetTimeZone(TZ);
   overview_();
   root_();
   if (!prop_('SECRET_KEY')) {
@@ -163,8 +164,25 @@ function indexProject_(p, info) {
   ]]);
 }
 
+/**
+ * De overzichts-Sheet: de Sheet waaraan het script gebonden is. Is het script los gemaakt (script.google.com),
+ * dan maakt het zelf een Sheet "InspectSolutions overzicht" in de hoofdmap en onthoudt die in OVERVIEW_ID.
+ */
+function overviewSs_() {
+  var bound = SpreadsheetApp.getActive();
+  if (bound) return bound;
+  var id = prop_('OVERVIEW_ID');
+  if (id) {
+    try { return SpreadsheetApp.openById(id); } catch (e) { /* Sheet bestaat niet meer: maak een nieuwe */ }
+  }
+  var ss = SpreadsheetApp.create('InspectSolutions overzicht');
+  DriveApp.getFileById(ss.getId()).moveTo(root_());
+  PropertiesService.getScriptProperties().setProperty('OVERVIEW_ID', ss.getId());
+  return ss;
+}
+
 function overview_() {
-  var ss = SpreadsheetApp.getActive();
+  var ss = overviewSs_();
   var sh = ss.getSheetByName(PROJECTEN_SHEET);
   if (!sh) {
     sh = ss.insertSheet(PROJECTEN_SHEET, 0);
@@ -262,7 +280,7 @@ function delete_(req) {
 }
 
 function codes_(list, version) {
-  var ss = SpreadsheetApp.getActive();
+  var ss = overviewSs_();
   var sh = ss.getSheetByName(CODES_SHEET_NAME) || ss.insertSheet(CODES_SHEET_NAME);
   sh.clear();
   sh.getRange(1, 1, 1, 2).setValues([['Code', 'Omschrijving']]).setFontWeight('bold');

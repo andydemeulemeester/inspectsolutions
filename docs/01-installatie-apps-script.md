@@ -30,6 +30,8 @@ InspectSolutions/
 3. **Implementeren doet bij voorkeur de eigenaar zelf**, ingelogd met zijn account. De web-app draait als “Ik”, het account dat de implementatie aanmaakt. Maakt de ontwikkelaar de implementatie, dan kan het script onder diens account gaan draaien en komen de foto’s in de verkeerde Drive terecht. Test dit bij de installatie.
 
 ## 1. Een overzichts-Sheet maken
+> Heb je het script los aangemaakt op script.google.com (niet via Extensies > Apps Script in een Sheet), dan mag je deze stap overslaan: het script maakt dan zelf een Sheet **InspectSolutions overzicht** in de hoofdmap.
+
 1. Ga naar sheets.google.com en maak een lege spreadsheet. Noem ze bv. **InspectSolutions overzicht**.
 2. Laat ze leeg. Het script maakt hierin het tabblad `Projecten` (alle projecten met links naar hun Sheet en fotomap) en het tabblad `Codes` (de codelijst, ingevuld door de app).
 
