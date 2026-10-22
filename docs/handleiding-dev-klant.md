@@ -4,22 +4,14 @@ Deze handleiding is voor het **testen** van de app vóór ze in gebruik genomen 
 
 De testversie herken je aan het **rode icoon met “DEV”** en het rode “DEV”-label naast de titel. De echte app (PRD) is **limoengroen**.
 
-De verbindingsgegevens (webadres en geheime sleutel) krijg je apart. Ze staan niet in deze handleiding.
-
 ## 1. Installeren op de gsm
 1. Open **https://dev.inspect.gapsolutions.be** in **Chrome** op de gsm, **met internet aan**.
 2. Vul je e-mailadres in en daarna de **code die je per e-mail krijgt**. Dit is nodig om de testomgeving te openen.
 3. Tik op het menu (⋮) > **App installeren** of **Toevoegen aan startscherm**.
 4. Open de app via het rode icoon “Inspect DEV” op het startscherm.
 
-## 2. Verbinding invoeren (eerste start)
-Bij de eerste start opent het scherm **Beheer** vanzelf.
-1. Het **Webadres** staat al ingevuld (het eindigt op `/exec`).
-2. Vul bij **Geheime sleutel** de sleutel uit je bericht in.
-3. Tik **Verbinding testen**. Er moet **“Verbinding werkt.”** verschijnen.
-4. Tik **Verbinding opslaan** en daarna **Terug**.
-
-Tip: kopieer het webadres en de sleutel uit je bericht en plak ze in de velden. Zo vermijd je typfouten.
+## 2. Verbinding
+De verbinding met de Google Sheet is al ingesteld: je hoeft niets in te vullen. Wil je dit controleren, open dan **Beheer** en tik **Verbinding testen**. Er moet **“Verbinding werkt.”** verschijnen.
 
 ## 3. Een project aanmaken
 Elk project heeft een eigen nummering, een eigen Google Sheet en een eigen fotomap. Zonder project kun je geen punt invoeren.
@@ -64,7 +56,7 @@ Vink af wat je gedaan hebt en noteer wat niet werkte.
 
 **Basis**
 - [ ] App installeren en openen via het rode icoon
-- [ ] Verbinding invoeren en testen
+- [ ] Verbinding testen in Beheer
 - [ ] Punt aanmaken met 1 item en 2 foto’s
 - [ ] Punt aanmaken met 2 items, opmerking, status OK en een prijs
 - [ ] Op een foto tekenen met pen, pijl, ovaal en tekst; ongedaan maken, opnieuw uitvoeren en alles wissen
@@ -101,7 +93,7 @@ Vink af wat je gedaan hebt en noteer wat niet werkte.
 ## 7. Problemen
 | Probleem | Oplossing |
 |---|---|
-| “Sleutel geweigerd” | Voer de sleutel in Beheer opnieuw in (kopiëren en plakken). |
+| “Sleutel geweigerd” | Meld dit aan de ontwikkelaar: de sleutel in de app moet vernieuwd worden. |
 | “Apps Script is verouderd” | De app stuurt dan niets, alles blijft veilig op de gsm. Meld dit aan de ontwikkelaar: het script moet bijgewerkt worden. Tik daarna **Nu synchroniseren**. |
 | “Onverwacht antwoord” | Controleer het webadres: het moet eindigen op `/exec`. |
 | Punten blijven “Te versturen” | Controleer internet, tik **Nu synchroniseren** en lees de “Laatste fout” in de synchronisatiebalk. |

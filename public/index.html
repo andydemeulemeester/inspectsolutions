@@ -132,7 +132,8 @@
     <div class="notice" id="firstRun" hidden><strong>Eerste start.</strong> Vul hieronder de verbinding met de Google Sheet in. Doe dit met internet aan. Daarna werkt de app ook zonder verbinding.</div>
 
     <h2 id="hCfg">Verbinding</h2>
-    <p class="muted">Het webadres van het Apps Script staat al ingevuld. Vul enkel de geheime sleutel in. Ze worden enkel op dit toestel bewaard.</p>
+    <p class="muted" id="cfgIntro">Het webadres van het Apps Script en de geheime sleutel. Ze worden enkel op dit toestel bewaard.</p>
+    <div id="cfgFields">
     <div class="field">
       <label for="cfgUrl">Webadres (eindigt op /exec)</label>
       <input id="cfgUrl" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false">
@@ -141,6 +142,7 @@
       <label for="cfgKey">Geheime sleutel</label>
       <input id="cfgKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
       <div class="muted small formnote" id="cfgKeyHint"></div>
+    </div>
     </div>
     <div class="row field">
       <button type="button" class="btn" id="btnCfgTest">Verbinding testen</button>

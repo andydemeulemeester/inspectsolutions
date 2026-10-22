@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-var VERSION = "1.4.2"; /* houd gelijk met VERSION in sw.js */
+var VERSION = "1.4.3"; /* houd gelijk met VERSION in sw.js */
 var CODES_VERSION = 2;   /* verhoog als de standaardcodelijst verandert (zie scripts/update-codes.js) */
 
 var $ = function(s){ return document.querySelector(s); };
@@ -1172,7 +1172,7 @@ function bindProjects(){
    en volgt een gewijzigde sleutel of een nieuw adres. */
 async function applyBuiltInConfig(){
   var url = window.INSPECT_SCRIPT_URL, key = window.INSPECT_SCRIPT_KEY;
-  if(!url || !key) return;
+  if(!builtInConfig()) return;
   if(cfg && cfg.url === url && cfg.key === key) return;
   cfg = {url: url, key: key};
   await Store.setMeta("config", cfg);
@@ -1186,11 +1186,15 @@ function openCodes(){
   $("#codesVersion").textContent = codesVersionNote();
   $("#btnWipe").textContent = "Alle punten wissen";
   $("#btnResend").textContent = "Alles opnieuw versturen";
+  var fixed = builtInConfig();
+  $("#cfgFields").hidden = fixed;
+  $("#btnCfgSave").hidden = fixed;
+  $("#cfgIntro").textContent = fixed ? "De verbinding met het Apps Script is al ingesteld. Tik op Verbinding testen om ze te controleren." : "Het webadres van het Apps Script en de geheime sleutel. Ze worden enkel op dit toestel bewaard.";
   $("#cfgUrl").value = cfg ? cfg.url : (window.INSPECT_SCRIPT_URL || "");
   $("#cfgKey").value = "";
   $("#cfgKeyHint").textContent = cfg ? "Een sleutel is opgeslagen. Laat leeg om die te houden." : "";
   setCfgState("", "");
-  $("#firstRun").hidden = !!cfg;
+  $("#firstRun").hidden = !!cfg || fixed;
   renderStorage();
   pushLayer("codes");
 }
@@ -1199,7 +1203,9 @@ function setCfgState(text, cls){
   el.textContent = text;
   el.className = "cfgstate" + (cls ? " " + cls : "");
 }
+function builtInConfig(){ return !!(window.INSPECT_SCRIPT_URL && window.INSPECT_SCRIPT_KEY); }
 function readCfgInputs(){
+  if(builtInConfig()) return {url: window.INSPECT_SCRIPT_URL, key: window.INSPECT_SCRIPT_KEY};
   var url = $("#cfgUrl").value.trim();
   var key = $("#cfgKey").value.trim() || (cfg ? cfg.key : "");
   if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)){
