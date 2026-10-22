@@ -16,7 +16,7 @@
  *   OVERVIEW_ID   automatisch bij een los script (niet gebonden aan een Sheet): de zelf aangemaakte overzichts-Sheet
  */
 
-var VERSION = '1.3.2';
+var VERSION = '1.3.3';
 // Versie van het protocol tussen de app en dit script. De app weigert te synchroniseren als dit getal lager is dan wat
 // ze nodig heeft (REQUIRED_SCRIPT_API in public/app.js). Verhoog het hier én daar wanneer de app nieuwe acties of
 // gegevens stuurt die een ouder script niet begrijpt.
@@ -76,7 +76,7 @@ function doPost(e) {
 
 /* ---------- Projecten ---------- */
 
-/** Maakt het project aan als het nog niet bestaat en past de naam aan als die in de app gewijzigd is. */
+/** Maakt het project aan als het nog niet bestaat, past de naam aan als die in de app gewijzigd is en werkt het overzicht bij. */
 function projectAction_(p) {
   var ctx = project_(p, true);
   var name = projectName_(p);
@@ -85,8 +85,10 @@ function projectAction_(p) {
     DriveApp.getFileById(ctx.info.ss).setName(name);
     ctx.info.name = name;
     saveInfo_(ctx.id, ctx.info);
-    indexProject_(p, ctx.info);
   }
+  // Altijd in het overzicht zetten (de rij wordt op id gezocht, dus nooit dubbel). Zo komt een project er ook in als het
+  // overzicht pas later bereikbaar was of OVERVIEW_ID later is ingesteld.
+  indexProject_(p, ctx.info);
   return { ok: true, id: ctx.id, sheetUrl: ctx.info.sheetUrl, folderUrl: ctx.info.folderUrl, name: name };
 }
 
